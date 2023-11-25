@@ -42,7 +42,7 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
         particles.setOverflowHint(ParticleGroup.OverflowHint.CullOld);
         
         geometry = new TrailingGeometry(particles, this);
-        geometry.setFaceCamera(false);
+        geometry.setFaceCamera(true);
         geometry.setLocalTranslation(0f, 2f, 0f);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);
         geometry.setCullHint(Spatial.CullHint.Never);
