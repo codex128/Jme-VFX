@@ -1,0 +1,28 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Boolean FaceCamera : true
+        Texture2D Texture
+        Color Color1      : 1.0 0.0 0.0 1.0
+        Color Color2      : 0.5 0.5 0.0 1.0
+        Float Speed       : 1.0
+        Float Threshold   : 0.9
+    }
+    Technique {
+        VertexShader GLSL330 GLSL120 GLSL100   : Shaders/trail.vert
+        FragmentShader GLSL330 GLSL120 GLSL100 : Shaders/trail.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+            CameraPosition
+            Time
+        }
+    }
+    Technique Glow {
+        VertexShader GLSL330 GLSL120 GLSL100   : Shaders/trail.vert
+        FragmentShader GLSL330 GLSL120 GLSL100 : Shaders/trail-glow.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+            CameraPosition
+            Time
+        }
+    }
+}

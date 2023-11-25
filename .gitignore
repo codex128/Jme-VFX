@@ -1,0 +1,14 @@
+/dist/
+/build/
+/nbproject/
+/resources/
+*.so
+*.dll
+*.gltf
+*.glb
+*.xcf
+*.kra
+*.blend1
+*.blend2
+*.blend3
+*.j3odata
