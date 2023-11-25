@@ -7,6 +7,7 @@ package codex.vfx;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
 import com.jme3.scene.BatchNode;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
 import java.nio.ByteBuffer;
@@ -17,15 +18,11 @@ import java.nio.ShortBuffer;
  *
  * @author codex
  */
-public class TrailingMesh extends ParticleMesh {
-    
-    private final Vector3f normal = new Vector3f(1, 0, 0);
-    private boolean faceCamera = true;
+public class TrailingMesh extends Mesh {
     
     private final Vector3f tempVec1 = new Vector3f();
     private final Vector3f tempVec2 = new Vector3f();
     
-    @Override
     public void initBuffers(ParticleGroup group) {
         BatchNode n;
         // position buffer
@@ -109,8 +106,7 @@ public class TrailingMesh extends ParticleMesh {
         }
         
     }
-    @Override
-    public void updateMesh(ParticleGroup group) {
+    public void updateMesh(ParticleGroup group, boolean faceCamera) {
         
         VertexBuffer pvb = getBuffer(VertexBuffer.Type.Position);
         FloatBuffer positions = (FloatBuffer)pvb.getData();        
@@ -212,37 +208,6 @@ public class TrailingMesh extends ParticleMesh {
     }
     private Vector4f buildVector4f(Vector3f vec, float w) {
         return new Vector4f(vec.x, vec.y, vec.z, w);
-    }
-    protected void setNormal(Vector3f normal) {
-        this.normal.set(normal);
-    }
-    
-    /**
-     * Sets hardware normals enabled/disabled.
-     * <p>
-     * Hardware normals make mesh segments face the camera. This is the
-     * most optimal setting, and is well suited for most trailing effects.
-     * <p>
-     * Software normals make mesh segments face a set normal direction.
-     * This is less efficient than hardware normals, and is best suited for
-     * effects such as sword stroke trails. This setting is dependent on a number
-     * of mesh properties, such as radius and normal.
-     * <p>
-     * It is recommended that this be set during initialization only. Otherwise
-     * the mesh may suddenly change shape.
-     * <p>
-     * This setting must agree with the corresponding material parameter
-     * ({@link TrailingGeometry} does this automatically when using its setter).
-     * <p>
-     * default=hardware
-     * 
-     * @param faceCam 
-     */
-    public void setFaceCamera(boolean faceCam) {
-        faceCamera = faceCam;
-    }    
-    public boolean isFaceCamera() {
-        return faceCamera;
     }
     
 }

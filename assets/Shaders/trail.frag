@@ -14,6 +14,10 @@ varying float fadeCoord;
 const float seedFloat = 1234.123;
 const vec2 seedVec = vec2(14.3423, 76.8593);
 
+float fraction(float f) {
+    return f-floor(f);
+}
+
 float randomVecToFloat(vec2 vector, float seed) {
     return fract(sin(dot(vector.xy, seedVec)) * seed);
 }
@@ -35,19 +39,16 @@ void main() {
     vec2 scrollUv = fract(vec2(texCoord.x + g_Time * m_Speed, texCoord.y));
     vec2 scrollUv2 = fract(vec2(texCoord.x + g_Time * m_Speed * 1.1, texCoord.y));
     vec4 texColor = texture2D(m_Texture, scrollUv);
+    texColor.a = clamp(texColor.a, 0.0, 0.9);
     
-    float coordFactor = 1.0 - texCoord.x;
+    float coordFactor = texCoord.x;
     float fade = coordFactor + noiseTexture(scrollUv2, 20.0, seedFloat);
     
-    float value = 3.0 * texColor.a * fade * fadeCoord + fadeCoord * 0.7;
-    if (value < m_Threshold || texColor.a < 0.005) {
+    float value = 3.0 * texColor.a * fade * fadeCoord;
+    if (value < m_Threshold) {
         discard;
     }
     
     gl_FragColor = mix(m_Color1, m_Color2, clamp(texColor.a, 0.0, 1.0));
-    
-    //gl_FragColor = m_Color1;
-    
-    //gl_FragColor = vec4(scrollUv.yyy, 1.0);
     
 }

@@ -5,15 +5,21 @@
 package codex.vfx.test;
 
 import codex.vfx.ParticleData;
-import codex.vfx.ParticleGeometry;
 import codex.vfx.ParticleGroup;
 import codex.vfx.ParticleSpawner;
 import codex.vfx.TrailingGeometry;
+import com.jme3.anim.AnimComposer;
+import com.jme3.anim.SkinningControl;
+import com.jme3.asset.TextureKey;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.BloomFilter;
 import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.texture.Texture;
 
 /**
  *
@@ -36,31 +42,48 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
         particles.setOverflowHint(ParticleGroup.OverflowHint.CullOld);
         
         geometry = new TrailingGeometry(particles, this);
+        geometry.setFaceCamera(false);
         geometry.setLocalTranslation(0f, 2f, 0f);
-        geometry.setIgnoreTransform(true);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);
         geometry.setCullHint(Spatial.CullHint.Never);
         Material mat = new Material(assetManager, "MatDefs/trail.j3md");
-        mat.setTexture("Texture", assetManager.loadTexture("Textures/wispy-trail.png"));
+        TextureKey texKey = new TextureKey("Textures/wispy-trail.png");
+        texKey.setTextureTypeHint(Texture.Type.TwoDimensional);
+        texKey.setGenerateMips(false);
+        Texture tex = assetManager.loadTexture(texKey);
+        mat.setTexture("Texture", tex);
         mat.setFloat("Speed", 1f);
-        //mat.setBoolean("FaceCamera", false);
         mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
         mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-        //mat.getAdditionalRenderState().setWireframe(true);
         mat.setTransparent(true);
         geometry.setMaterial(mat);
-        rootNode.attachChild(geometry);
+        
+        Spatial person = assetManager.loadModel("Demo/YBot.j3o");
+        person.setLocalScale(0.01f);
+        person.setLocalTranslation(0f, 0f, 0f);
+        rootNode.attachChild(person);
+        
+        AnimComposer anim = ((Node)person).getChild("Armature").getControl(AnimComposer.class);
+        SkinningControl skin = anim.getSpatial().getControl(SkinningControl.class);
+        anim.setCurrentAction("cold-pistol-kill");
+        
+        skin.getAttachmentsNode("mixamorig:LeftHand").attachChild(geometry);
+        
+        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+        BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
+        fpp.addFilter(bloom);
+        //viewPort.addProcessor(fpp);
         
     }
     @Override
     public void simpleUpdate(float tpf) {
-        geometry.move(0f, 0f, 1f*tpf);
+        //geometry.move(0f, 0f, 1f*tpf);
     }
     @Override
     public ParticleData createParticle(Vector3f position, ParticleGroup group) {
         ParticleData p = new ParticleData(1f);
-        p.setPosition(cam.getLocation().add(cam.getDirection().mult(5f)));
-        p.setRadius(.2f);
+        p.setPosition(position);
+        p.setRadius(.1f);
         return p;
     }
     

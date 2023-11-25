@@ -18,7 +18,7 @@ MaterialDef Simple {
     }
     Technique Glow {
         VertexShader GLSL330 GLSL120 GLSL100   : Shaders/trail.vert
-        FragmentShader GLSL330 GLSL120 GLSL100 : Shaders/trail-glow.frag
+        FragmentShader GLSL330 GLSL120 GLSL100 : Shaders/trail.frag
         WorldParameters {
             WorldViewProjectionMatrix
             CameraPosition
