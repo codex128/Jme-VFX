@@ -5,7 +5,7 @@ VFX Library for JMonkeyEngine. This is a work in progress: APIs may change.
 ## Current Features
 
 ### Trailing Geometry
-![demo of trailing geometry](https://github.com/codex128/Jme-VFX/blob/master/screenshots/demo-trailing-effect.png?raw=true&scale=0.5)
+![demo of trailing geometry](https://github.com/codex128/Jme-VFX/blob/master/screenshots/demo-trail-effect.png?raw=true)
 
 ```java
 ParticleGroup particles = new ParticleGroup<>(50);
