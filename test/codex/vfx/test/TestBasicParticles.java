@@ -4,6 +4,7 @@
  */
 package codex.vfx.test;
 
+import codex.boost.ColorHSBA;
 import codex.boost.Timer;
 import codex.boost.TimerListener;
 import codex.vfx.mesh.MeshPrototype;
@@ -67,7 +68,7 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
         for (int i = 0; i < 5; i++) {
             ParticleData p = new ParticleData(2f);
             p.setPosition(new Vector3f(0f, 2f, 0f));
-            p.setColor(ColorRGBA.randomColor().setAlpha(1f));
+            p.setColor(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
             p.setVelocity(nextRandomVector().multLocal(2f));
             p.setScale(.1f);
             p.rotationSpeed = FastMath.rand.nextFloat(-20f, 20f);

@@ -74,7 +74,7 @@ public class DemoLightingState extends GameAppState {
         skyControl.getSunAndStars().setHour(9);
         Updater updater = skyControl.getUpdater();
         updater.setAmbientLight(gi);
-        updater.setMainMultiplier(.2f);
+        updater.setMainMultiplier(.7f);
         updater.setMainLight(dl);
         updater.addShadowRenderer(dlsr);
         skyControl.setEnabled(true);
