@@ -5,6 +5,7 @@ MaterialDef Simple {
         Color Color1      : 1.0 0.0 0.0 1.0
         Color Color2      : 0.5 0.5 0.0 1.0
         Float Speed       : 1.0
+        Float TextureScale : 1.0
         Float Threshold   : 0.9
     }
     Technique {

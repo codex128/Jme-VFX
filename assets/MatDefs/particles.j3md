@@ -1,0 +1,22 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Texture2D ColorMap
+        Float AlphaDiscard : 0.2
+        Vector2 SpriteGrid
+    }
+    Technique {
+        VertexShader   GLSL330 GLSL120 GLSL100 : Shaders/particles.vert
+        FragmentShader GLSL330 GLSL120 GLSL100 : Shaders/particles.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldMatrix
+            ViewProjectionMatrix
+            CameraPosition
+            CameraUp
+        }
+        Defines {
+            COLORMAP : ColorMap
+            USE_SPRITE_SHEET : SpriteGrid
+        }
+    }
+}

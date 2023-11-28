@@ -23,7 +23,6 @@ void main() {
     if (m_FaceCamera) {
         vec3 outward = cross(normalize(inTexCoord3.xyz), normalize(g_CameraPosition - inPosition)) * inTexCoord3.w;
         wPosition = inPosition + outward;
-        //wPosition = inPosition;
         gl_Position = g_WorldViewProjectionMatrix * vec4(wPosition, 1.0);
     }
     else {

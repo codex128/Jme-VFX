@@ -4,10 +4,11 @@
  */
 package codex.vfx.test;
 
-import codex.vfx.ParticleData;
-import codex.vfx.ParticleGroup;
-import codex.vfx.ParticleSpawner;
-import codex.vfx.TrailingGeometry;
+import codex.vfx.test.util.DemoApplication;
+import codex.vfx.particles.ParticleData;
+import codex.vfx.particles.ParticleGroup;
+import codex.vfx.particles.ParticleSpawner;
+import codex.vfx.particles.TrailingGeometry;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
 import com.jme3.asset.TextureKey;
@@ -36,12 +37,21 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
     }
     
     @Override
+    @SuppressWarnings("Convert2Lambda")
     public void demoInitApp() {
         
         particles = new ParticleGroup<>(50);
         particles.setOverflowHint(ParticleGroup.OverflowHint.CullOld);
         
-        geometry = new TrailingGeometry(particles, this);
+        geometry = new TrailingGeometry(particles, new ParticleSpawner() {
+            @Override
+            public ParticleData createParticle(Vector3f position, ParticleGroup group) {
+                ParticleData p = new ParticleData(1f);
+                p.setPosition(position);
+                p.setScale(.1f);
+                return p;
+            }
+        });
         geometry.setFaceCamera(true);
         geometry.setLocalTranslation(0f, 2f, 0f);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);
@@ -53,6 +63,7 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
         Texture tex = assetManager.loadTexture(texKey);
         mat.setTexture("Texture", tex);
         mat.setFloat("Speed", 1f);
+        mat.setFloat("TextureScale", 2f);
         mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
         mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         mat.setTransparent(true);
@@ -76,14 +87,14 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
         
     }
     @Override
-    public void simpleUpdate(float tpf) {
+    public void demoUpdate(float tpf) {
         //geometry.move(0f, 0f, 1f*tpf);
     }
     @Override
     public ParticleData createParticle(Vector3f position, ParticleGroup group) {
         ParticleData p = new ParticleData(1f);
         p.setPosition(position);
-        p.setRadius(.1f);
+        p.setScale(.1f);
         return p;
     }
     
