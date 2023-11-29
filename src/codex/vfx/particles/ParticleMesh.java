@@ -26,20 +26,23 @@ import java.nio.ShortBuffer;
  */
 public class ParticleMesh extends Mesh {
     
-    private int lastRenderSize = -1;
+    private int capacity;
+    private int size = -1;
     
     public void initBuffers(ParticleGroup group, MeshPrototype prototype) {
         
+        capacity = group.capacity();
+        
         // Position buffer, stores the origin of the particle for each vertex.
-        FloatBuffer pb = BufferUtils.createVector3Buffer(group.capacity() * prototype.getNumVerts());
+        FloatBuffer pb = BufferUtils.createVector3Buffer(capacity * prototype.getNumVerts());
         MeshUtils.initializeVertexBuffer(this, Type.Position, Usage.Stream, Format.Float, pb, 3);
         
         // Local position buffer, sprite index packed into z component
-        FloatBuffer pb2 = BufferUtils.createVector3Buffer(group.capacity() * prototype.getNumVerts());
+        FloatBuffer pb2 = BufferUtils.createVector3Buffer(capacity * prototype.getNumVerts());
         MeshUtils.initializeVertexBuffer(this, Type.TexCoord2, Usage.Stream, Format.Float, pb2, 3);
         
         // Main texture coordinate buffer, does not change.
-        FloatBuffer tb = BufferUtils.createVector2Buffer(group.capacity() * prototype.getNumVerts());
+        FloatBuffer tb = BufferUtils.createVector2Buffer(capacity * prototype.getNumVerts());
         for (int i = 0; i < group.capacity(); i++) {
             for (Vector2f c : prototype.getTexCoords()) {
                 MeshUtils.writeVector2(tb, c);
@@ -49,11 +52,11 @@ public class ParticleMesh extends Mesh {
         MeshUtils.initializeVertexBuffer(this, Type.TexCoord, Usage.Static, Format.Float, tb, 2);
         
         // Color buffer, including alpha.
-        FloatBuffer cb = BufferUtils.createFloatBuffer(group.capacity() * prototype.getNumVerts() * 4);
+        FloatBuffer cb = BufferUtils.createFloatBuffer(capacity * prototype.getNumVerts() * 4);
         MeshUtils.initializeVertexBuffer(this, Type.Color, Usage.Stream, Format.Float, cb, 4);
         
         // Index buffer, changes as the number of particles changes -> dynamic usage
-        ShortBuffer ib = BufferUtils.createShortBuffer(group.capacity() * prototype.getNumIndices());
+        ShortBuffer ib = BufferUtils.createShortBuffer(capacity * prototype.getNumIndices());
         for (int i = 0, vi = 0; i < group.capacity(); i++) {
             for (int j : prototype.getIndices()) {
                 ib.put((short)(vi+j));
@@ -68,6 +71,9 @@ public class ParticleMesh extends Mesh {
         
     }
     public void updateMesh(ParticleGroup<ParticleData> group, MeshPrototype prototype) {
+        if (capacity != group.capacity()) {
+            initBuffers(group, prototype);
+        }
         VertexBuffer pBuf = getBuffer(Type.Position);
         FloatBuffer positions = (FloatBuffer)pBuf.getData();        
         VertexBuffer lBuf = getBuffer(Type.TexCoord2);
@@ -79,15 +85,9 @@ public class ParticleMesh extends Mesh {
         colors.clear();
         Vector3f vec = new Vector3f();
         Quaternion q = new Quaternion();
-        //System.out.println("update particles ("+group.size()+"/"+group.capacity()+")");
-        int c = 0;
         for (ParticleData p : group) {
             q.fromAngles(0f, 0f, p.angle);
             for (Vector3f v : prototype.getVerts()) {
-                if (group.size() > 25) {
-                    //c += 3;
-                    //System.out.println("cap="+positions.capacity()+", limit="+positions.limit()+", position="+positions.position()+", n="+c);
-                }
                 q.mult(v, vec).multLocal(p.scale);
                 MeshUtils.writeVector3(positions, p.position);
                 localPos.put(vec.x).put(vec.y).put(p.spriteIndex);
@@ -100,13 +100,13 @@ public class ParticleMesh extends Mesh {
         pBuf.updateData(positions);
         lBuf.updateData(localPos);
         cBuf.updateData(colors);
-        if (lastRenderSize != group.size()) {
+        if (size != group.size()) {
             VertexBuffer iBuf = getBuffer(Type.Index);
             ShortBuffer index = (ShortBuffer)iBuf.getData();
             index.position(0);
             index.limit(group.size() * prototype.getNumIndices());
             iBuf.updateData(index);
-            lastRenderSize = group.size();
+            size = group.size();
         }
         updateCounts();
     }

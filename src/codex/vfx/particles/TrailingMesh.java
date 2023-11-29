@@ -20,13 +20,15 @@ import java.nio.ShortBuffer;
  */
 public class TrailingMesh extends Mesh {
     
-    private final Vector3f tempVec1 = new Vector3f();
-    private final Vector3f tempVec2 = new Vector3f();
+    private int capacity;
+    private int size = -1;
     
     public void initBuffers(ParticleGroup group) {
         
+        capacity = group.capacity();
+        
         // position buffer
-        FloatBuffer pb = BufferUtils.createVector3Buffer(group.capacity() * 2);
+        FloatBuffer pb = BufferUtils.createVector3Buffer(capacity * 2);
         VertexBuffer buf = getBuffer(VertexBuffer.Type.Position);
         if (buf != null) {
             buf.updateData(pb);
@@ -37,7 +39,7 @@ public class TrailingMesh extends Mesh {
         }
         
         // color buffer
-        ByteBuffer cb = BufferUtils.createByteBuffer(group.capacity() * 2 * 4);
+        ByteBuffer cb = BufferUtils.createByteBuffer(capacity * 2 * 4);
         buf = getBuffer(VertexBuffer.Type.Color);
         if (buf != null) {
             buf.updateData(cb);
@@ -49,7 +51,7 @@ public class TrailingMesh extends Mesh {
         }
         
         // buffer for storing rotational axis used for hardware normals
-        FloatBuffer ab = BufferUtils.createFloatBuffer(group.capacity() * 2 * 4);
+        FloatBuffer ab = BufferUtils.createFloatBuffer(capacity * 2 * 4);
         buf = getBuffer(VertexBuffer.Type.TexCoord3);
         if (buf != null) {
             buf.updateData(ab);
@@ -60,7 +62,7 @@ public class TrailingMesh extends Mesh {
         }
         
         // buffer for general vertex info
-        FloatBuffer tb2 = BufferUtils.createFloatBuffer(group.capacity() * 2);
+        FloatBuffer tb2 = BufferUtils.createFloatBuffer(capacity * 2);
         buf = getBuffer(VertexBuffer.Type.TexCoord2);
         if (buf != null) {
             buf.updateData(tb2);
@@ -71,7 +73,7 @@ public class TrailingMesh extends Mesh {
         }
         
         // main buffer for texture coordinates
-        FloatBuffer tb = BufferUtils.createVector2Buffer(group.capacity() * 2);
+        FloatBuffer tb = BufferUtils.createVector2Buffer(capacity * 2);
         float uvx = 0, incrUv = 1f/group.capacity();
         for (int i = 0; i < group.capacity(); i++) {
             tb.put(uvx).put(0f)
@@ -89,7 +91,7 @@ public class TrailingMesh extends Mesh {
         }
         
         // index buffer
-        ShortBuffer ib = BufferUtils.createShortBuffer((group.capacity()-1) * 6);
+        ShortBuffer ib = BufferUtils.createShortBuffer((capacity-1) * 6);
         for (int i = 0, j = 0; i < group.capacity()-1; i++) {
             MeshUtils.writeTriangle(ib, j  , j+1, j+2);
             MeshUtils.writeTriangle(ib, j+3, j+2, j+1);
@@ -101,12 +103,16 @@ public class TrailingMesh extends Mesh {
             buf.updateData(ib);
         } else {
             VertexBuffer ivb = new VertexBuffer(VertexBuffer.Type.Index);
-            ivb.setupData(VertexBuffer.Usage.Static, 3, VertexBuffer.Format.UnsignedShort, ib);
+            ivb.setupData(VertexBuffer.Usage.Dynamic, 3, VertexBuffer.Format.UnsignedShort, ib);
             setBuffer(ivb);
         }
         
     }
     public void updateMesh(ParticleGroup group, boolean faceCamera) {
+        
+        if (group.capacity() != capacity) {
+            initBuffers(group);
+        }
         
         VertexBuffer pvb = getBuffer(VertexBuffer.Type.Position);
         FloatBuffer positions = (FloatBuffer)pvb.getData();        
@@ -117,11 +123,6 @@ public class TrailingMesh extends Mesh {
         VertexBuffer avb = getBuffer(VertexBuffer.Type.TexCoord3);
         FloatBuffer axis = (FloatBuffer)avb.getData();
         
-        VertexBuffer texVb = getBuffer(VertexBuffer.Type.TexCoord);
-        FloatBuffer texCoords = (FloatBuffer)texVb.getData();
-        VertexBuffer ivb = getBuffer(VertexBuffer.Type.Index);
-        ShortBuffer index = (ShortBuffer)ivb.getData();
-        
         // initialize buffers to be written (does not actually clear the buffer)
         positions.clear();
         colors.clear();
@@ -130,8 +131,6 @@ public class TrailingMesh extends Mesh {
         
         //texCoords.limit(group.size() * 2 * 2);
         //texCoords.position(0);
-        index.limit(Math.max(group.size()-1, 0) * 6);
-        index.position(0);
         
         float life = 0, lifeIncr = 1f/group.size();
         for (int i = 0; group.size() >= 2 && i < group.size(); i++) {
@@ -183,8 +182,15 @@ public class TrailingMesh extends Mesh {
         cvb.updateData(colors);
         tvb.updateData(info);
         avb.updateData(axis);
-        //texVb.updateData(texCoords);
-        ivb.updateData(index);
+        
+        if (group.size() != size) {        
+            VertexBuffer ivb = getBuffer(VertexBuffer.Type.Index);
+            ShortBuffer index = (ShortBuffer)ivb.getData();
+            index.position(0);
+            index.limit(Math.max(group.size()-1, 0) * 6);
+            ivb.updateData(index);
+            size = group.size();
+        }
         
         updateCounts();
         updateBound();

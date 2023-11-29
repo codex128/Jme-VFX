@@ -4,6 +4,7 @@
  */
 package codex.vfx.test;
 
+import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.test.util.DemoApplication;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
@@ -41,7 +42,7 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
     public void demoInitApp() {
         
         particles = new ParticleGroup<>(50);
-        particles.setOverflowHint(ParticleGroup.OverflowHint.CullOld);
+        particles.setOverflowProtocol(OverflowProtocol.CULL_OLD);
         
         geometry = new TrailingGeometry(particles, new ParticleSpawner() {
             @Override
@@ -62,28 +63,19 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
         texKey.setGenerateMips(false);
         Texture tex = assetManager.loadTexture(texKey);
         mat.setTexture("Texture", tex);
-        mat.setFloat("Speed", 1f);
-        mat.setFloat("TextureScale", 2f);
+        mat.setFloat("Speed", 3.1f);
+        mat.setFloat("TextureScale", 3f);
         mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
         mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         mat.setTransparent(true);
         geometry.setMaterial(mat);
         
-        Spatial person = assetManager.loadModel("Demo/YBot.j3o");
-        person.setLocalScale(0.01f);
-        person.setLocalTranslation(0f, 0f, 0f);
-        rootNode.attachChild(person);
-        
-        AnimComposer anim = ((Node)person).getChild("Armature").getControl(AnimComposer.class);
-        SkinningControl skin = anim.getSpatial().getControl(SkinningControl.class);
+        setupCharacter();
         anim.setCurrentAction("cold-pistol-kill");
         
-        skin.getAttachmentsNode("mixamorig:LeftHand").attachChild(geometry);
+        skin.getAttachmentsNode("mixamorig:LeftHandMiddle1").attachChild(geometry);
         
-        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
-        BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
-        fpp.addFilter(bloom);
-        //viewPort.addProcessor(fpp);
+        setupBloom();
         
     }
     @Override

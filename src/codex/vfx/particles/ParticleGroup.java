@@ -4,7 +4,7 @@
  */
 package codex.vfx.particles;
 
-import codex.vfx.particles.ParticleData;
+import java.nio.BufferOverflowException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -17,23 +17,9 @@ import java.util.Iterator;
  */
 public class ParticleGroup <T extends ParticleData> implements Iterable<T> {
     
-    public enum OverflowHint {
-        
-        /**
-         * In case of overflow, new particles are culled in favor of old particles.
-         */
-        CullNew,
-        
-        /**
-         * In case of overflow, old particles are culled in favor of new particles.
-         */
-        CullOld;
-        
-    }
-    
     private final ArrayList<T> particles = new ArrayList<>();
     private final int capacity;
-    private OverflowHint overflow = OverflowHint.CullNew;
+    private OverflowProtocol overflow = OverflowProtocol.CULL_NEW;
     
     public ParticleGroup(int capacity) {
         if (capacity < 1) {
@@ -55,11 +41,8 @@ public class ParticleGroup <T extends ParticleData> implements Iterable<T> {
     public boolean add(T particle) {
         if (particles.size() < capacity) {
             return particles.add(particle);
-        } else if (overflow == OverflowHint.CullOld) {
-            particles.remove(0);
-            return particles.add(particle);
         }
-        return false;
+        return (overflow.removeParticle(this, particle) && particles.add(particle)) & validateGroupSize();
     }
     public int addAll(Collection<T> particles) {
         if (this.particles.size()+particles.size() <= capacity) {
@@ -68,15 +51,14 @@ public class ParticleGroup <T extends ParticleData> implements Iterable<T> {
         }
         int c = 0;
         for (T p : particles) {
-            if (this.particles.size() >= capacity) {
-                if (overflow == OverflowHint.CullNew) {
-                    break;
-                } else if (overflow == OverflowHint.CullOld) {
-                    this.particles.remove(0);
-                }
+            if (this.particles.size() >= capacity && !overflow.removeParticle(this, p)) {
+                continue;
             }
             this.particles.add(p);
             c++;
+        }
+        if (particles.size() > capacity) {
+            throw new BufferOverflowException();
         }
         return c;
     }
@@ -85,17 +67,18 @@ public class ParticleGroup <T extends ParticleData> implements Iterable<T> {
     }
     
     /**
-     * Indicates what to do if the particle list exceeds the capacity.
+     * Sets the protocol for when an added particle would make
+     * the group's size exceed its capacity.
      * 
      * @param overflow 
      */
-    public void setOverflowHint(OverflowHint overflow) {
+    public void setOverflowProtocol(OverflowProtocol overflow) {
         this.overflow = overflow;
     }
     
     public ParticleData get(int i) {
         return particles.get(i);
-    }    
+    }
     public ArrayList<T> getParticleList() {
         return particles;
     }
@@ -105,13 +88,20 @@ public class ParticleGroup <T extends ParticleData> implements Iterable<T> {
     public int capacity() {
         return capacity;
     }
-    public OverflowHint getOverflowHint() {
+    public OverflowProtocol getOverflowHint() {
         return overflow;
     }
 
     @Override
     public Iterator<T> iterator() {
         return particles.iterator();
+    }
+    
+    private boolean validateGroupSize() {
+        if (particles.size() > capacity) {
+            throw new BufferOverflowException();
+        }
+        return true;
     }
     
 }

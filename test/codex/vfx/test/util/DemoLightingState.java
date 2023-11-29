@@ -14,10 +14,11 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.light.LightProbe;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
 import com.jme3.shadow.CompareMode;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.util.SkyFactory;
 import jme3utilities.sky.SkyControl;
@@ -45,12 +46,14 @@ public class DemoLightingState extends GameAppState {
         dl.setColor(ColorRGBA.White);
         rootNode.addLight(dl);
         
-        DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 4096*2, 4);
-        dlsr.setLambda(1);
-        dlsr.setShadowCompareMode(CompareMode.Hardware);
-        dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF4);
-        dlsr.setLight(dl);
-        app.getViewPort().addProcessor(dlsr);
+        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+        DirectionalLightShadowFilter dlsf = new DirectionalLightShadowFilter(assetManager, 4096*2, 4);
+        dlsf.setLambda(1);
+        dlsf.setShadowCompareMode(CompareMode.Hardware);
+        dlsf.setEdgeFilteringMode(EdgeFilteringMode.PCF4);
+        dlsf.setLight(dl);
+        fpp.addFilter(dlsf);
+        app.getViewPort().addProcessor(fpp);
         
         EnvironmentCamera envCam = getState(EnvironmentCamera.class, true);
         envCam.setPosition(new Vector3f(0f, 20f, 0f));
@@ -70,13 +73,13 @@ public class DemoLightingState extends GameAppState {
         rootNode.addControl(skyControl);
         skyControl.setCloudiness(0.8f);
         skyControl.setCloudsYOffset(0.4f);
-        skyControl.setTopVerticalAngle(1.78f);
+        skyControl.setTopVerticalAngle(1.784f);
         skyControl.getSunAndStars().setHour(9);
         Updater updater = skyControl.getUpdater();
         updater.setAmbientLight(gi);
         updater.setMainMultiplier(.7f);
         updater.setMainLight(dl);
-        updater.addShadowRenderer(dlsr);
+        //updater.addShadowRenderer(dlsf);
         skyControl.setEnabled(true);
     
     }

@@ -1,0 +1,15 @@
+MaterialDef KernelFilter {
+    MaterialParameters {
+        Texture2D Texture
+        Int NumSamples
+        Vector2 SampleStep
+        Float SampleFactor : 1.0
+        Matrix3 Kernel;
+    }
+    Technique {
+        VertexShader   GLSL300 GLSL150 GLSL100 : Shaders/post.vert
+        FragmentShader GLSL300 GLSL150 GLSL100 : Shaders/kernel.frag
+        WorldParameters {
+        }
+    }
+}

@@ -1,0 +1,16 @@
+
+/*
+Kernel: Matrix that defines how surrounding pixels are sampled by the fragment shader.
+*/
+
+/**
+ * Get the offset from the texture coordinates the sample should occur at.
+ */
+vec2 getKernelSampleOffset(int sample, int sampleSquareSize, vec2 step) {
+    vec2 offset = vec2(0.0);
+    int mid = sampleSquareSize / 2;
+    offset.x = mod(sample, sampleSquareSize) - mid;
+    offset.y = (sample / sampleSquareSize) - mid;
+    offset *= step;
+    return offset;
+}
