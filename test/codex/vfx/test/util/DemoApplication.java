@@ -30,6 +30,8 @@ public abstract class DemoApplication extends SimpleApplication {
     protected SkinningControl skin;
     protected Vector2f windowSize;
     protected FilterPostProcessor fpp;
+    protected boolean enableLightProbes = true;
+    protected boolean enableShadows = true;
     
     public static void main(String[] args) {
         new RawDemoApp().start();
@@ -49,7 +51,7 @@ public abstract class DemoApplication extends SimpleApplication {
         
         stateManager.attachAll(
             new EnvironmentCamera(),
-            new DemoLightingState()
+            new DemoLightingState(this)
         );
         
         setupScene();
@@ -93,6 +95,13 @@ public abstract class DemoApplication extends SimpleApplication {
     protected void setupBloom() {
         BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
         fpp.addFilter(bloom);
+    }
+    
+    protected void enableLightProbes(boolean enable) {
+        enableLightProbes = enable;
+    }
+    protected void enableShadows(boolean enable) {
+        enableShadows = enable;
     }
     
     private static class RawDemoApp extends DemoApplication {

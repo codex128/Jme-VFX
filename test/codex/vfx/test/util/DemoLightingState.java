@@ -32,7 +32,12 @@ import jme3utilities.sky.Updater;
  */
 public class DemoLightingState extends GameAppState {
     
+    private final DemoApplication demoApp;
     private SkyControl skyControl;
+    
+    public DemoLightingState(DemoApplication demoApp) {
+        this.demoApp = demoApp;
+    }
     
     @Override
     protected void init(Application app) {
@@ -46,25 +51,29 @@ public class DemoLightingState extends GameAppState {
         dl.setColor(ColorRGBA.White);
         rootNode.addLight(dl);
         
-        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
-        DirectionalLightShadowFilter dlsf = new DirectionalLightShadowFilter(assetManager, 4096*2, 4);
-        dlsf.setLambda(1);
-        dlsf.setShadowCompareMode(CompareMode.Hardware);
-        dlsf.setEdgeFilteringMode(EdgeFilteringMode.PCF4);
-        dlsf.setLight(dl);
-        fpp.addFilter(dlsf);
-        app.getViewPort().addProcessor(fpp);
+        if (demoApp.enableShadows) {
+            FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+            DirectionalLightShadowFilter dlsf = new DirectionalLightShadowFilter(assetManager, 4096*2, 4);
+            dlsf.setLambda(1);
+            dlsf.setShadowCompareMode(CompareMode.Hardware);
+            dlsf.setEdgeFilteringMode(EdgeFilteringMode.PCF4);
+            dlsf.setLight(dl);
+            fpp.addFilter(dlsf);
+            app.getViewPort().addProcessor(fpp);
+        }
         
-        EnvironmentCamera envCam = getState(EnvironmentCamera.class, true);
-        envCam.setPosition(new Vector3f(0f, 20f, 0f));
-        envCam.setBackGroundColor(new ColorRGBA(.3f, 0f, .6f, 1f));
-        LightProbeFactory.makeProbe(envCam, rootNode, new JobProgressAdapter<LightProbe>() {
-            @Override
-            public void done(LightProbe result) {
-                result.getArea().setRadius(100f);
-                rootNode.addLight(result);
-            }
-        });
+        if (demoApp.enableLightProbes) {
+            EnvironmentCamera envCam = getState(EnvironmentCamera.class, true);
+            envCam.setPosition(new Vector3f(0f, 20f, 0f));
+            envCam.setBackGroundColor(new ColorRGBA(.3f, 0f, .6f, 1f));
+            LightProbeFactory.makeProbe(envCam, rootNode, new JobProgressAdapter<LightProbe>() {
+                @Override
+                public void done(LightProbe result) {
+                    result.getArea().setRadius(100f);
+                    rootNode.addLight(result);
+                }
+            });
+        }
         
         Spatial sky = SkyFactory.createSky(assetManager, "Demo/FullskiesSunset0068.dds", SkyFactory.EnvMapType.CubeMap);
         sky.setShadowMode(RenderQueue.ShadowMode.Off);
@@ -79,7 +88,6 @@ public class DemoLightingState extends GameAppState {
         updater.setAmbientLight(gi);
         updater.setMainMultiplier(.7f);
         updater.setMainLight(dl);
-        //updater.addShadowRenderer(dlsf);
         skyControl.setEnabled(true);
     
     }
