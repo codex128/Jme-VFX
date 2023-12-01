@@ -6,6 +6,7 @@ package codex.vfx.test;
 
 import codex.vfx.particles.gpu.GpuParticleGeometry;
 import codex.vfx.test.util.DemoApplication;
+import com.jme3.app.state.VideoRecorderAppState;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.opencl.CommandQueue;
@@ -23,7 +24,7 @@ import org.lwjgl.opengl.GL20;
  */
 public class TestGpuParticles extends DemoApplication {
     
-    private final int particleMapSize = 2048;
+    private final int particleMapSize = 1024;
     
     private Context clContext;
     private CommandQueue clQueue;
@@ -43,6 +44,8 @@ public class TestGpuParticles extends DemoApplication {
     
     @Override
     public void demoInitApp() {
+        
+        stateManager.attach(new VideoRecorderAppState());
         
         inputManager.setCursorVisible(true);
         setViewDistance(30);

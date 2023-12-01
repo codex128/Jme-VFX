@@ -8,8 +8,12 @@ inline float random(float seed) {
 inline float randomRange(float a, float b, float seed) {
     return random(seed) * (b - a) + a;
 }
-inline float sq(float f) {
-    return f*f;
+inline float pow(float f, int n) {
+    float product = 1;
+    for (int i = 0; i < n; i++) {
+        product *= f;
+    }
+    return product;
 }
 inline float lerp(float a, float b, float blend) {
     return (b-a) * blend + a;
@@ -43,7 +47,7 @@ __kernel void initParticleData(__write_only image2d_t posImage,
         randomRange(-1, 1, i+j*2),
         randomRange(-1, 1, i*4+j*3)
     );    
-    vel.wy = normalize(speed) * randomRange(0, 10, j*10+i);
+    vel.wy = normalize(speed) * randomRange(5, 20, j*10+i);
     
     float red = randomRange(0.8, 1.0, j*i+76);
     float4 color = (float4)(
@@ -62,7 +66,7 @@ __kernel void updateParticleData(__write_only image2d_t writePosImage,
                                  __read_only image2d_t readPosImage,
                                  __write_only image2d_t writeVelImage,
                                  __read_only image2d_t readVelImage,
-                                 float randomValue, float time, float tpf) {
+                                 float randomValue, float seconds, float tpf) {
     
     const int i = get_global_id(0);
     const int j = get_global_id(1);
@@ -77,10 +81,12 @@ __kernel void updateParticleData(__write_only image2d_t writePosImage,
     // vel.z = accelleration due to gravity
     // vel.w = horizontal plane speed
     
-    float t = time;    
+    float t = seconds;
+    int n = 3;
+    
     pos.x = cos(vel.x) * t * vel.w;
     pos.z = sin(vel.x) * t * vel.w;
-    pos.y = vel.z * 0.5f * -sq(t) + vel.y*t + pos.w;
+    pos.y = (vel.z/n)*-pow(t, n) + vel.y*t + pos.w;
     
     write_imagef(writePosImage, index, pos);
     write_imagef(writeVelImage, index, vel);
