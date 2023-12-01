@@ -8,6 +8,8 @@ uniform float m_Size;
 
 attribute int inPosition;
 
+varying float index;
+
 /**
  * Reads position data from the image of a given resolution at the vertex id.
  */
@@ -24,9 +26,11 @@ vec3 fetchPosition(sampler2D image, vec2 res, float i) {
 
 void main() {
     
+    index = gl_VertexID;
+    
     vec3 position = fetchPosition(m_PositionTexture, m_DataResolution, gl_VertexID);
     
-    gl_Position = g_WorldViewProjectionMatrix * vec4(position * 100.0, 1.0);
+    gl_Position = g_WorldViewProjectionMatrix * vec4(position, 1.0);
     gl_PointSize = m_Size;
     
 }

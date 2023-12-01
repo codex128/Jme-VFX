@@ -2,7 +2,7 @@ MaterialDef Simple {
     MaterialParameters {
         Texture2D PositionTexture
         Vector2 DataResolution
-        Float Size : 10.0
+        Float Size : 1.0
         Color Color : 1.0 0.0 0.0 1.0
     }
     Technique {
