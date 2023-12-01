@@ -1,18 +1,18 @@
 
 #import "Common/ShaderLib/GLSLCompat.glsllib"
 
-uniform vec4 m_Color;
-varying float index;
+#ifdef COLORMAP
+    varying vec4 vertexColor;
+#endif
 
-float random(float seed) {
-    return fract(sin(seed) * (seed + 1043.503));
-}
-vec3 randomColor(float seed) {
-    return vec3(random(seed), random(seed + 3402.34), random(seed - 413.39));
-}
+uniform vec4 m_Color;
 
 void main() {
     
-    gl_FragColor.rgb = randomColor(index);
+    #ifdef COLORMAP
+        gl_FragColor = vertexColor * m_Color;
+    #else
+        gl_FragColor = m_Color;
+    #endif
     
 }

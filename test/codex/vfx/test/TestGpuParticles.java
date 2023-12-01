@@ -23,10 +23,10 @@ import org.lwjgl.opengl.GL20;
  */
 public class TestGpuParticles extends DemoApplication {
     
-    private final int particleMapSize = 1024;
+    private final int particleMapSize = 2048;
     
-    Context clContext;
-    CommandQueue clQueue;
+    private Context clContext;
+    private CommandQueue clQueue;
     
     public static void main(String[] args) {
         TestGpuParticles app = new TestGpuParticles();
@@ -45,11 +45,13 @@ public class TestGpuParticles extends DemoApplication {
     public void demoInitApp() {
         
         inputManager.setCursorVisible(true);
+        setViewDistance(30);
         
         GL11.glEnable(GL20.GL_VERTEX_PROGRAM_POINT_SIZE);
-        GL14.glPointParameterf(GL14.GL_POINT_SIZE_MIN, 3.5f);
-        GL14.glPointParameterf(GL14.GL_POINT_SIZE_MAX, 100.0f);
-        GL14.glPointParameterf(GL14.GL_POINT_FADE_THRESHOLD_SIZE, 90.0f);
+        GL14.glPointParameterf(GL14.GL_POINT_SIZE_MIN, 1.0f);
+        GL14.glPointParameterf(GL14.GL_POINT_SIZE_MAX, 10.0f);
+        GL14.glPointParameterf(GL14.GL_POINT_FADE_THRESHOLD_SIZE, 0f);
+        GL14.glPointParameterf(GL14.GL_POINT_DISTANCE_ATTENUATION, 1.0f);
         
         clContext = context.getOpenCLContext();
         clQueue = clContext.createQueue().register();
@@ -62,6 +64,9 @@ public class TestGpuParticles extends DemoApplication {
         GpuParticleGeometry geometry = new GpuParticleGeometry(clContext, clQueue, program, mat, particleMapSize, particleMapSize);
         geometry.setCullHint(Spatial.CullHint.Never);
         rootNode.attachChild(geometry);
+        
+        //setupBloom();
+        //bloom.setBlurScale(5.0f);
         
     }
     @Override

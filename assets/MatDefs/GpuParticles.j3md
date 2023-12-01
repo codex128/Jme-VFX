@@ -1,15 +1,31 @@
 MaterialDef Simple {
     MaterialParameters {
-        Texture2D PositionTexture
+        Texture2D ColorMap
+        Texture2D PositionTexture0
+        Texture2D PositionTexture1
+        Int TextureIndex : 0
         Vector2 DataResolution
-        Float Size : 1.0
-        Color Color : 1.0 0.0 0.0 1.0
+        Float Size : 10.0
+        Color Color : 1.0 1.0 1.0 1.0
     }
     Technique {
         VertexShader   GLSL450 : Shaders/readGpuParticles.vert
         FragmentShader GLSL450 : Shaders/readGpuParticles.frag
         WorldParameters {
             WorldViewProjectionMatrix
+        }
+        Defines {
+            COLORMAP : ColorMap
+        }
+    }
+    Technique Glow {
+        VertexShader   GLSL450 : Shaders/readGpuParticles.vert
+        FragmentShader GLSL450 : Shaders/readGpuParticles.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+        Defines {
+            COLORMAP : ColorMap
         }
     }
 }

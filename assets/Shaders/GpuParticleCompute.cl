@@ -8,8 +8,11 @@ inline float random(float seed) {
 inline float randomRange(float a, float b, float seed) {
     return random(seed) * (b - a) + a;
 }
-inline float3 randomBoxPosition(float radius, float3 seed) {
-    return (float3)(randomRange(-radius, radius, seed.x), randomRange(-radius, radius, seed.y), randomRange(-radius, radius, seed.z));
+inline float sq(float f) {
+    return f*f;
+}
+inline float lerp(float a, float b, float blend) {
+    return (b-a) * blend + a;
 }
 
 
@@ -18,28 +21,69 @@ inline float3 randomBoxPosition(float radius, float3 seed) {
  *****************/
 
 
-__kernel void initParticleData(__write_only image2d_t posImage, write_only image2d_t velImage, float radius, float speed) {
+__kernel void initParticleData(__write_only image2d_t posImage,
+                               __write_only image2d_t velImage,
+                               __write_only image2d_t clrImage) {
     
     int i = get_global_id(0);
     int j = get_global_id(1);
+    int2 index = (int2)(i, j);
     
-    float4 pos = (float4)(randomBoxPosition(radius, (float3)(i+j, i*j, i+i*j+j)), 0.0);
-    //float3 vel = normalize(pos - (float3)(0.0, 1.0, 0.0)) * speed;
+    float4 pos = (float4)(
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    );
+    float4 vel = (float4)(0, 0, 0, 0);
+    vel.x = randomRange(0.0f, 6.283185307f, i+j);
+    vel.z = 4.9f;
     
-    write_imagef(posImage, (int2)(i, j), pos);
+    float2 speed = (float2)(
+        randomRange(-1, 1, i+j*2),
+        randomRange(-1, 1, i*4+j*3)
+    );    
+    vel.wy = normalize(speed) * randomRange(0, 10, j*10+i);
+    
+    float red = randomRange(0.8, 1.0, j*i+76);
+    float4 color = (float4)(
+        red, 1.0-red, 0.0, 1.0
+    );
+    
+    write_imagef(posImage, index, pos);
+    write_imagef(velImage, index, vel);
+    write_imagef(clrImage, index, color);
     
 }
 
 
 
-__kernel void updateParticleData(__write_only image2d_t posImage, image2d_t velImage, float randomValue, float tpf) {
-        
+__kernel void updateParticleData(__write_only image2d_t writePosImage,
+                                 __read_only image2d_t readPosImage,
+                                 __write_only image2d_t writeVelImage,
+                                 __read_only image2d_t readVelImage,
+                                 float randomValue, float time, float tpf) {
+    
     const int i = get_global_id(0);
     const int j = get_global_id(1);
+    const int2 index = (int2)(i, j);
     
-    float4 color = (float4)(random((float)(i+j) * randomValue), random((float)(i*j) * randomValue), random((float)(i+i*j+j) * randomValue), 0.0);
+    float4 pos = read_imagef(readPosImage, index);
+    float4 vel = read_imagef(readVelImage, index);
     
-    write_imagef(posImage, (int2)(i, j), color);
+    // pos.w = initial y position
+    // vel.x = angle
+    // vel.y = initial y velocity
+    // vel.z = accelleration due to gravity
+    // vel.w = horizontal plane speed
+    
+    float t = time;    
+    pos.x = cos(vel.x) * t * vel.w;
+    pos.z = sin(vel.x) * t * vel.w;
+    pos.y = vel.z * 0.5f * -sq(t) + vel.y*t + pos.w;
+    
+    write_imagef(writePosImage, index, pos);
+    write_imagef(writeVelImage, index, vel);
     
 }
 

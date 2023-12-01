@@ -30,6 +30,7 @@ public abstract class DemoApplication extends SimpleApplication {
     protected SkinningControl skin;
     protected Vector2f windowSize;
     protected FilterPostProcessor fpp;
+    protected BloomFilter bloom;
     protected boolean enableLightProbes = true;
     protected boolean enableShadows = true;
     
@@ -41,8 +42,8 @@ public abstract class DemoApplication extends SimpleApplication {
     public void simpleInitApp() {
         
         flyCam.setMoveSpeed(7);
-        cam.setLocation(new Vector3f(3f, 3f, 3f));
-        cam.lookAtDirection(new Vector3f(-1f, -0.5f, -1f), Vector3f.UNIT_Y);
+        setViewDistance(5);
+        cam.lookAtDirection(Vector3f.UNIT_XYZ.negate(), Vector3f.UNIT_Y);
         
         windowSize = new Vector2f();
         
@@ -93,8 +94,11 @@ public abstract class DemoApplication extends SimpleApplication {
         rootNode.attachChild(character);
     }
     protected void setupBloom() {
-        BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
+        bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
         fpp.addFilter(bloom);
+    }
+    protected void setViewDistance(float d) {
+        cam.setLocation(Vector3f.UNIT_XYZ.normalize().multLocal(d));
     }
     
     protected void enableLightProbes(boolean enable) {

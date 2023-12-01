@@ -16,7 +16,10 @@ import com.jme3.opencl.Program;
  */
 public class GpuParticleGeometry extends MeshTypeGeometry<GpuParticleMesh> {
     
-    public static final byte BIND_WAIT_FRAMES = 2;
+    /**
+     * Number of frames between initializing OpenGL and OpenCL.
+     */
+    public static final byte CL_WAIT_FRAMES = 2;
     
     private byte initCounter = 0;
     
@@ -30,13 +33,13 @@ public class GpuParticleGeometry extends MeshTypeGeometry<GpuParticleMesh> {
     
     @Override
     public void updateLogicalState(float tpf) {
-        if (initCounter == BIND_WAIT_FRAMES) {
-            tMesh.initOpenCL();
+        if (initCounter == CL_WAIT_FRAMES) {
+            tMesh.initOpenCL(material);
         }
-        if (initCounter <= BIND_WAIT_FRAMES) {
+        if (initCounter <= CL_WAIT_FRAMES) {
             initCounter++;
         }
-        tMesh.updateMesh(tpf);
+        tMesh.updateMesh(material, tpf);
     }
     @Override
     public void setMaterial(Material material) {}

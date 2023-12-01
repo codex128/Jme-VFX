@@ -8,9 +8,9 @@ import codex.vfx.utils.MeshUtils;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
-import com.jme3.opencl.Buffer;
 import com.jme3.opencl.CommandQueue;
 import com.jme3.opencl.Context;
+import com.jme3.opencl.Event;
 import com.jme3.opencl.Image;
 import com.jme3.opencl.Kernel;
 import com.jme3.opencl.MemoryAccess;
@@ -18,6 +18,7 @@ import com.jme3.opencl.Program;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.shader.VarType;
 import com.jme3.texture.Image.Format;
 import com.jme3.texture.Texture2D;
 import com.jme3.util.BufferUtils;
@@ -42,21 +43,33 @@ public class GpuParticleMesh extends Mesh {
     /**
      * Name of the position texture parameter of the material.
      */
-    public static final String POSITION_TEXTURE_PARAM = "PositionTexture";
+    public static final String POSITION_TEXTURES_PARAM = "PositionTexture";
     
     /**
      * Name of the data resolution parameter of the material.
      */
     public static final String RESOLUTION_PARAM = "DataResolution";
     
+    /**
+     * Name of the texture index parameter of the material.
+     */
+    public static final String TEXTURE_INDEX = "TextureIndex";
+    
+    /**
+     * Name of the color map parameter of the material.
+     */
+    public static final String COLOR_MAP_PARAM = "ColorMap";
+    
     private final Context context;
     private final CommandQueue queue;
     private final Kernel initKernel, updateKernel;
     private final Kernel.WorkSize work;
     private final int width, height;
-    private Image clPosImage, clVelImage;
-    private Texture2D glPosTex;
+    private PingPongImages posImages, velImages;
+    private Image clColorImg;
+    private Texture2D glColorTex;
     private boolean openglReady = false, openclReady = false;
+    private float time = 0f;
     
     public GpuParticleMesh(Context context, CommandQueue queue, Program program, int width, int height) {
         this.context = context;
@@ -83,8 +96,13 @@ public class GpuParticleMesh extends Mesh {
             pb.put((byte)0);
         }
         MeshUtils.initializeVertexBuffer(this, Type.Position, VertexBuffer.Usage.Static, VertexBuffer.Format.UnsignedByte, pb, 1);
-        glPosTex = new Texture2D(width, height, Format.RGBA32F);
-        material.setTexture(POSITION_TEXTURE_PARAM, glPosTex);
+        posImages = new PingPongImages();
+        posImages.setTexture(0, new Texture2D(width, height, Format.RGBA32F));
+        posImages.setTexture(1, new Texture2D(width, height, Format.RGBA32F));
+        glColorTex = new Texture2D(width, height, Format.RGBA32F);
+        material.setTexture(POSITION_TEXTURES_PARAM+"0", posImages.getTexture(0));
+        material.setTexture(POSITION_TEXTURES_PARAM+"1", posImages.getTexture(1));
+        material.setTexture(COLOR_MAP_PARAM, glColorTex);
         material.setVector2(RESOLUTION_PARAM, new Vector2f(width, height));
         updateCounts();
         openglReady = true;
@@ -92,36 +110,62 @@ public class GpuParticleMesh extends Mesh {
     
     /**
      * Initialize bindings for OpenCL and run initialization kernel.
+     * 
+     * @param material material belonging to this mesh's geometry
      */
-    public void initOpenCL() {
+    public void initOpenCL(Material material) {
         if (!openglReady) {
             throw new IllegalStateException(
                     "Cannot initialize OpenCL until resources have been passed to the GPU."
                     +" Initialize OpenGL first.");
         }
+        velImages = new PingPongImages();
         Image.ImageFormat format = new Image.ImageFormat(Image.ImageChannelOrder.RGBA, Image.ImageChannelType.FLOAT);
         Image.ImageDescriptor desc = new Image.ImageDescriptor(Image.ImageType.IMAGE_2D, width, height, 0, 0);
-        clPosImage = context.bindImage(glPosTex, MemoryAccess.WRITE_ONLY);
-        clVelImage = context.createImage(MemoryAccess.READ_WRITE, format, desc);
-        clPosImage.acquireImageForSharingNoEvent(queue);
-        initKernel.Run1NoEvent(queue, work, clPosImage, clVelImage, 1f, 0.01f);
-        clPosImage.releaseImageForSharingNoEvent(queue);
+        posImages.setImage(0, context.bindImage(posImages.getTexture(0), MemoryAccess.READ_WRITE));
+        posImages.setImage(1, context.bindImage(posImages.getTexture(1), MemoryAccess.READ_WRITE));
+        velImages.setImage(0, context.createImage(MemoryAccess.READ_WRITE, format, desc));
+        velImages.setImage(1, context.createImage(MemoryAccess.READ_WRITE, format, desc));
+        clColorImg = context.bindImage(glColorTex, MemoryAccess.WRITE_ONLY);
+        posImages.acquireImagesNoEvent(queue);
+        clColorImg.acquireImageForSharingNoEvent(queue);
+        initKernel.Run1NoEvent(queue, work,
+            posImages.getWriteImage(),
+            velImages.getWriteImage(),
+            clColorImg
+        );
+        posImages.releaseImagesNoEvent(queue);
+        clColorImg.releaseImageForSharingNoEvent(queue);
+        material.setInt(TEXTURE_INDEX, posImages.getWriteIndex());
+        posImages.flipIndex();
+        velImages.flipIndex();
         openclReady = true;
     }
     
     /**
      * Run OpenCL update kernel.
      * 
+     * @param material material belonging to this mesh's geometry
      * @param tpf time per frame
      */
-    public void updateMesh(float tpf) {        
+    public void updateMesh(Material material, float tpf) {        
         if (!openglReady || !openclReady) {
             // don't update if OpenGL or OpenCL have not been initialized
             return;
         }
-        clPosImage.acquireImageForSharingNoEvent(queue);
-        updateKernel.Run1NoEvent(queue, work, clPosImage, clVelImage, FastMath.rand.nextFloat(), tpf);
-        clPosImage.releaseImageForSharingNoEvent(queue);
+        time += tpf;
+        posImages.acquireImagesNoEvent(queue);
+        updateKernel.Run1(queue, work,
+            posImages.getWriteImage(),
+            posImages.getReadImage(),
+            velImages.getWriteImage(),
+            velImages.getReadImage(),
+            FastMath.rand.nextFloat(), time, tpf
+        );   
+        posImages.releaseImagesNoEvent(queue);            
+        material.setInt(TEXTURE_INDEX, posImages.getWriteIndex());
+        posImages.flipIndex();
+        velImages.flipIndex();
     }
     
     /**
