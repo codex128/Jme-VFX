@@ -23,7 +23,7 @@ import org.lwjgl.opengl.GL20;
  */
 public class TestGpuParticles extends DemoApplication {
     
-    private final int numParticles = 170000;
+    private final int particleMapSize = 1024;
     
     Context clContext;
     CommandQueue clQueue;
@@ -31,8 +31,7 @@ public class TestGpuParticles extends DemoApplication {
     public static void main(String[] args) {
         TestGpuParticles app = new TestGpuParticles();
         AppSettings settings = new AppSettings(true);
-        settings.setVSync(false);
-        settings.setFrameRate(-1);
+        settings.setVSync(true);
         settings.setOpenCLSupport(true);
         settings.setResolution(1024, 768);
         settings.setRenderer(AppSettings.LWJGL_OPENGL45);
@@ -60,7 +59,7 @@ public class TestGpuParticles extends DemoApplication {
         
         Material mat = new Material(assetManager, "MatDefs/GpuParticles.j3md");
         mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
-        GpuParticleGeometry geometry = new GpuParticleGeometry(clContext, clQueue, program, mat, numParticles);
+        GpuParticleGeometry geometry = new GpuParticleGeometry(clContext, clQueue, program, mat, particleMapSize, particleMapSize);
         geometry.setCullHint(Spatial.CullHint.Never);
         rootNode.attachChild(geometry);
         

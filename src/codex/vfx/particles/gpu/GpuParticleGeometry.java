@@ -20,9 +20,9 @@ public class GpuParticleGeometry extends MeshTypeGeometry<GpuParticleMesh> {
     
     private byte initCounter = 0;
     
-    public GpuParticleGeometry(Context context, CommandQueue queue, Program program, Material mat, int capacity) {
+    public GpuParticleGeometry(Context context, CommandQueue queue, Program program, Material mat, int width, int height) {
         super(GpuParticleMesh.class);
-        setTypeMesh(new GpuParticleMesh(context, queue, program, capacity));
+        setTypeMesh(new GpuParticleMesh(context, queue, program, width, height));
         setIgnoreTransform(true);
         super.setMaterial(mat);
         tMesh.initOpenGL(material);

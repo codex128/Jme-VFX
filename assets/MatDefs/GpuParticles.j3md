@@ -1,7 +1,9 @@
 MaterialDef Simple {
     MaterialParameters {
-        Color Color : 1.0 0.0 0.0 1.0
+        Texture2D PositionTexture
+        Vector2 DataResolution
         Float Size : 10.0
+        Color Color : 1.0 0.0 0.0 1.0
     }
     Technique {
         VertexShader   GLSL450 : Shaders/readGpuParticles.vert
