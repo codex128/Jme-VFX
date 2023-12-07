@@ -10,8 +10,8 @@ import codex.vfx.opencl.PingPongImages;
 import codex.vfx.test.util.DemoApplication;
 import codex.vfx.utils.MeshUtils;
 import com.jme3.material.Material;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
 import com.jme3.opencl.Buffer;
 import com.jme3.opencl.CommandQueue;
 import com.jme3.opencl.Context;
@@ -26,9 +26,6 @@ import com.jme3.system.AppSettings;
 import com.jme3.texture.Image.Format;
 import com.jme3.util.BufferUtils;
 import java.nio.FloatBuffer;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL20;
 
 /**
  *
@@ -36,8 +33,15 @@ import org.lwjgl.opengl.GL20;
  */
 public class TestGpuParticles extends DemoApplication {
     
-    private final int particleMapSize = 256;
+    // Number of particles = this number squared.
+    private final int particleMapSize = 1024;
     
+    // Use images to store particle data as opposed to vertex buffers.
+    // WARNING: If using buffers, exceeding 70,000 particles may cause
+    //          the application to freeze.
+    private final boolean useImageParticles = true;
+    
+    // OpenCL
     private Context clContext;
     private CommandQueue clQueue;
     
@@ -57,49 +61,55 @@ public class TestGpuParticles extends DemoApplication {
     @Override
     public void demoInitApp() {
         
-        //stateManager.attach(new VideoRecorderAppState());
-        
+        // For developing GPU particles, always leave the cursor unlocked,
+        // so you can quit the application if it freezes.
         flyCam.setEnabled(false);
         inputManager.setCursorVisible(true);
-        setViewDistance(30);
         
-        GL11.glEnable(GL20.GL_VERTEX_PROGRAM_POINT_SIZE);
-        GL14.glPointParameterf(GL14.GL_POINT_SIZE_MIN, 1.0f);
-        GL14.glPointParameterf(GL14.GL_POINT_SIZE_MAX, 10.0f);
-        GL14.glPointParameterf(GL14.GL_POINT_FADE_THRESHOLD_SIZE, 0f);
-        GL14.glPointParameterf(GL14.GL_POINT_DISTANCE_ATTENUATION, 1.0f);
+        setViewDistance(30);
         
         clContext = context.getOpenCLContext();
         clQueue = clContext.createQueue().register();
-        Program program = clContext.createProgramFromSourceFiles(
-                assetManager, "Shaders/GpuParticleComputeBuffer.cl");
-        program.build();
-        program.register();
         
-//        GpuImageParticleGeometry geometry = new GpuImageParticleGeometry(clContext, clQueue, particleMapSize, particleMapSize);
-//        geometry.setKernels(program, "initParticleData", "updateParticleData");
-//        Material mat = new Material(assetManager, "MatDefs/GpuParticles.j3md");
-//        geometry.setMaterial(mat);
-//        geometry.setCullHint(Spatial.CullHint.Never);
-//        geometry.initOpenGL();
-//        rootNode.attachChild(geometry);
+        System.out.println("GpuParticleTest: creating "
+                +(particleMapSize*particleMapSize)+" particles using "
+                +(useImageParticles ? "images" : "vertex buffers"));
         
-        GpuBufferParticleGeometry bufGeom = new GpuBufferParticleGeometry(clContext, clQueue, particleMapSize * particleMapSize);
-        bufGeom.setKernels(program, "initParticleData", "updateParticleData");
-        Material bufMat = new Material(assetManager, "MatDefs/GpuBufferParticles.j3md");
-        bufGeom.setMaterial(bufMat);
-        bufGeom.setCullHint(Spatial.CullHint.Never);
-        bufGeom.initOpenGL();
-        rootNode.attachChild(bufGeom);
-        
-        //setupBloom();
-        //bloom.setBlurScale(5.0f);
+        if (useImageParticles) {
+            // Create GPU particles with images to store data
+            Program program = clContext.createProgramFromSourceFiles(
+                    assetManager, "Shaders/GpuParticleCompute.cl");
+            program.build();
+            program.register();
+            GpuImageParticleGeometry geometry = new GpuImageParticleGeometry(clContext, clQueue, particleMapSize, particleMapSize);
+            geometry.setKernels(program, "initParticleData", "updateParticleData");
+            Material mat = new Material(assetManager, "MatDefs/GpuParticles.j3md");
+            geometry.setMaterial(mat);
+            geometry.setCullHint(Spatial.CullHint.Never);
+            geometry.initOpenGL();
+            rootNode.attachChild(geometry);
+        } else {
+            // Create GPU particles with buffers to store data
+            Program program = clContext.createProgramFromSourceFiles(
+                    assetManager, "Shaders/GpuParticleComputeBuffer.cl");
+            program.build();
+            program.register();
+            GpuBufferParticleGeometry geometry = new GpuBufferParticleGeometry(clContext, clQueue, particleMapSize * particleMapSize);
+            geometry.setKernels(program, "initParticleData", "updateParticleData");
+            Material mat = new Material(assetManager, "MatDefs/GpuBufferParticles.j3md");
+            geometry.setMaterial(mat);
+            geometry.setCullHint(Spatial.CullHint.Never);
+            geometry.initOpenGL();
+            rootNode.attachChild(geometry);
+        }
         
     }
     @Override
     public void demoUpdate(float tpf) {}
     
-    
+    /**
+     * Implementation of CLDrivenGeometry that uses images to store particle data.
+     */
     public class GpuImageParticleGeometry extends CLDrivenGeometry {
         
         private final int width, height;
@@ -170,6 +180,10 @@ public class TestGpuParticles extends DemoApplication {
         }
         
     }
+    
+    /**
+     * Implementation of CLDrivenGeometry that uses buffers to store geometry.
+     */
     public class GpuBufferParticleGeometry extends CLDrivenGeometry {
 
         private final int capacity;
@@ -185,20 +199,12 @@ public class TestGpuParticles extends DemoApplication {
         protected void initOpenGLResources() {
             // position buffer
             FloatBuffer pb = BufferUtils.createVector3Buffer(capacity);
-            //for (int i = 0; i < capacity; i++) {
-            //    MeshUtils.writeVector3(pb, Vector3f.ZERO);
-            //}
-            //pb.clear();
             MeshUtils.initializeVertexBuffer(mesh,
                     VertexBuffer.Type.Position,
                     VertexBuffer.Usage.Stream,
                     VertexBuffer.Format.Float, pb, 3);
             // color buffer
             FloatBuffer cb = BufferUtils.createFloatBuffer(capacity * 4);
-            //for (int i = 0; i < capacity; i++) {
-            //    cb.put(0f).put(0f).put(0f).put(1f);
-            //}
-            //cb.clear();
             MeshUtils.initializeVertexBuffer(mesh,
                     VertexBuffer.Type.Color,
                     VertexBuffer.Usage.Stream,
@@ -217,7 +223,6 @@ public class TestGpuParticles extends DemoApplication {
         }
         @Override
         protected void applyInitArguments() {
-            System.out.println("apply init arguments");
             initKernel.getGlobalWorkSize().set(1, capacity, 1, 1);
             initKernel.setArg(0, posBuf);
             initKernel.setArg(1, clrBuf);
