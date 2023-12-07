@@ -56,11 +56,7 @@ __kernel void initParticleData(__global float * posBuf,
     
     int i = get_global_id(0);
     
-    float3 pos = (float3)(
-        0.0,
-        0.0,
-        0.0
-    );
+    float3 pos = (float3)(0.0, 0.0, 0.0);
     float4 d = (float4)(0, 0, 0, 0);
     d.x = randomRange(0.0f, 6.283185307f, i);
     d.z = 4.9f;
@@ -80,9 +76,6 @@ __kernel void initParticleData(__global float * posBuf,
     writeVector3(posBuf, pos, i*3);
     writeVector4(clrBuf, color, i*4);
     writeVector5(dataBuf, d, initialY, i*5);
-    //write_imagef(posImage, index, pos);
-    //write_imagef(dataImage, index, vel);
-    //write_imagef(clrImage, index, color);
     
 }
 
@@ -99,11 +92,10 @@ __kernel void updateParticleData(__global float * posBuf,
     float4 d = readVector4(dataBuf, i*5);
     float initialY = dataBuf[i*5+4];
     
-    // pos.w = initial y position
-    // vel.x = angle
-    // vel.y = initial y velocity
-    // vel.z = accelleration due to gravity
-    // vel.w = horizontal plane speed
+    // d.x = angle
+    // d.y = initial y velocity
+    // d.z = accelleration due to gravity
+    // d.w = horizontal plane speed
     
     float t = seconds;
     
@@ -112,7 +104,6 @@ __kernel void updateParticleData(__global float * posBuf,
     pos.y = (d.z/6)*-pow(t, 3) + d.y*t + initialY;
     
     writeVector3(posBuf, pos, i*3);
-    //write_imagef(writePosImage, index, pos);
     
 }
 

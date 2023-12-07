@@ -67,6 +67,13 @@ __kernel void updateParticleData(__write_only image2d_t writePosImage,
                                  __read_only image2d_t dataImage,
                                  float seconds) {
     
+    // This code could be improved to remove readPosImage
+    // altogether. However, I'm going to leave it in for
+    // three reasons:
+    //   1. I will probably change this later so that would
+    //      be impossible.
+    //   2. This is a test, and should test ping-ponging images.
+    
     const int i = get_global_id(0);
     const int j = get_global_id(1);
     const int2 index = (int2)(i, j);
