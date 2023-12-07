@@ -1,9 +1,9 @@
-MaterialDef Simple {
+MaterialDef GpuParticles {
     MaterialParameters {
         Texture2D ColorMap
-        Texture2D PositionTexture0
-        Texture2D PositionTexture1
-        Int TextureIndex : 0
+        Texture2D PositionMap0
+        Texture2D PositionMap1
+        Boolean ReadWriteValue : true
         Vector2 DataResolution
         Float Size : 10.0
         Color Color : 1.0 1.0 1.0 1.0

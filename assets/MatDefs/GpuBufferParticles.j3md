@@ -1,0 +1,20 @@
+MaterialDef GpuParticles {
+    MaterialParameters {
+        Float Size : 10.0
+        Color Color : 1.0 1.0 1.0 1.0
+    }
+    Technique {
+        VertexShader   GLSL450 : Shaders/readGpuBufferParticles.vert
+        FragmentShader GLSL450 : Shaders/readGpuBufferParticles.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+    }
+    Technique Glow {
+        VertexShader   GLSL450 : Shaders/readGpuBufferParticles.vert
+        FragmentShader GLSL450 : Shaders/readGpuBufferParticles.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+    }
+}

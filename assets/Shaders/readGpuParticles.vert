@@ -2,9 +2,9 @@
 #import "Common/ShaderLib/GLSLCompat.glsllib"
 
 uniform mat4 g_WorldViewProjectionMatrix;
-uniform sampler2D m_PositionTexture0;
-uniform sampler2D m_PositionTexture1;
-uniform int m_TextureIndex;
+uniform sampler2D m_PositionMap0;
+uniform sampler2D m_PositionMap1;
+uniform bool m_ReadWriteValue;
 uniform vec2 m_DataResolution;
 uniform float m_Size;
 
@@ -34,7 +34,7 @@ vec4 readPixel(sampler2D image, vec2 uv) {
 void main() {
     
     vec2 uv = calcPixelUv(m_DataResolution, gl_VertexID);    
-    vec4 position = readPixel((m_TextureIndex == 0 ? m_PositionTexture0 : m_PositionTexture1), uv);
+    vec4 position = readPixel((m_ReadWriteValue ? m_PositionMap0 : m_PositionMap1), uv);
     
     #ifdef COLORMAP
         vertexColor = readPixel(m_ColorMap, uv);

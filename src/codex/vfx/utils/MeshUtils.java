@@ -32,6 +32,11 @@ public class MeshUtils {
         }
     }    
     
+    public static void updateVertexBuffer(Mesh mesh, Type type) {
+        VertexBuffer buf = mesh.getBuffer(type);
+        buf.updateData(buf.getData());
+    }
+    
     public static void writeTriangle(ShortBuffer sb, int p1, int p2, int p3) {
         sb.put((short)p1).put((short)p2).put((short)p3);
     }

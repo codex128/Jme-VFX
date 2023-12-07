@@ -26,7 +26,7 @@ inline float lerp(float a, float b, float blend) {
 
 
 __kernel void initParticleData(__write_only image2d_t posImage,
-                               __write_only image2d_t velImage,
+                               __write_only image2d_t dataImage,
                                __write_only image2d_t clrImage) {
     
     int i = get_global_id(0);
@@ -46,7 +46,7 @@ __kernel void initParticleData(__write_only image2d_t posImage,
     float2 speed = (float2)(
         randomRange(-1, 1, i+j*2),
         randomRange(-1, 1, i*4+j*3)
-    );    
+    );
     vel.wy = normalize(speed) * randomRange(5, 20, j*10+i);
     
     float red = randomRange(0.8, 1.0, j*i+76);
@@ -55,7 +55,7 @@ __kernel void initParticleData(__write_only image2d_t posImage,
     );
     
     write_imagef(posImage, index, pos);
-    write_imagef(velImage, index, vel);
+    write_imagef(dataImage, index, vel);
     write_imagef(clrImage, index, color);
     
 }
@@ -64,16 +64,15 @@ __kernel void initParticleData(__write_only image2d_t posImage,
 
 __kernel void updateParticleData(__write_only image2d_t writePosImage,
                                  __read_only image2d_t readPosImage,
-                                 __write_only image2d_t writeVelImage,
-                                 __read_only image2d_t readVelImage,
-                                 float randomValue, float seconds, float tpf) {
+                                 __read_only image2d_t dataImage,
+                                 float seconds) {
     
     const int i = get_global_id(0);
     const int j = get_global_id(1);
     const int2 index = (int2)(i, j);
     
     float4 pos = read_imagef(readPosImage, index);
-    float4 vel = read_imagef(readVelImage, index);
+    float4 d = read_imagef(dataImage, index);
     
     // pos.w = initial y position
     // vel.x = angle
@@ -82,14 +81,12 @@ __kernel void updateParticleData(__write_only image2d_t writePosImage,
     // vel.w = horizontal plane speed
     
     float t = seconds;
-    int n = 3;
     
-    pos.x = cos(vel.x) * t * vel.w;
-    pos.z = sin(vel.x) * t * vel.w;
-    pos.y = (vel.z/n)*-pow(t, n) + vel.y*t + pos.w;
+    pos.x = cos(d.x) * t * d.w;
+    pos.z = sin(d.x) * t * d.w;
+    pos.y = (d.z/6)*-pow(t, 3) + d.y*t + pos.w;
     
     write_imagef(writePosImage, index, pos);
-    write_imagef(writeVelImage, index, vel);
     
 }
 
