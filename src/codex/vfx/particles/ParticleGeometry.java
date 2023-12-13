@@ -16,12 +16,12 @@ public class ParticleGeometry extends Geometry {
     
     private final ParticleGroup<ParticleData> group;
     private final MeshPrototype prototype;
-    private ParticleMesh pMesh;
+    private ParticleTriMesh pMesh;
     
     public ParticleGeometry(ParticleGroup group, MeshPrototype prototype) {
         this.group = group;
         this.prototype = prototype;
-        pMesh = new ParticleMesh();
+        pMesh = new ParticleTriMesh();
         super.setMesh(pMesh);
         pMesh.initBuffers(group, prototype);
         setIgnoreTransform(true);
@@ -33,14 +33,14 @@ public class ParticleGeometry extends Geometry {
     }
     @Override
     public void setMesh(Mesh mesh) {
-        if (!(mesh instanceof ParticleMesh)) {
+        if (!(mesh instanceof ParticleTriMesh)) {
             throw new IllegalArgumentException("Requires ParticleMesh.");
         }
         super.setMesh(mesh);
-        pMesh = (ParticleMesh)this.mesh;
+        pMesh = (ParticleTriMesh)this.mesh;
     }
     @Override
-    public ParticleMesh getMesh() {
+    public ParticleTriMesh getMesh() {
         return pMesh;
     }
     

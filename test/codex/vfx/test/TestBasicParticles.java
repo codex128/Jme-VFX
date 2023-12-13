@@ -12,6 +12,7 @@ import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGeometry;
 import codex.vfx.particles.ParticleGroup;
+import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.test.util.DemoApplication;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
@@ -41,6 +42,8 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
     
         group = new ParticleGroup(200);
         group.setOverflowProtocol(OverflowProtocol.CULL_NEW);
+        group.addDriver(ParticleDriver.force(new Vector3f(0f, -3f, 0f)));
+        group.addDriver(ParticleDriver.Position);
         
         geometry = new ParticleGeometry(group, MeshPrototype.QUAD);
         geometry.setLocalTranslation(0, 3, 0);
@@ -60,23 +63,15 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
     @Override
     public void demoUpdate(float tpf) {
         timer.update(tpf);
-        group.updateMembers(tpf);
-        for (ParticleData p : group) {
-            p.velocity.y -= gravity*tpf;
-            p.angle += p.rotationSpeed*tpf;
-            p.color.a = FastMath.clamp(p.getLifePercent()*10, 0, 1);
-            if (p.position.y < p.scale && p.position.x > -3 && p.position.x < 3 && p.position.z > -3 && p.position.z < 3) {
-                p.velocity.y = 3;
-            }
-        }
+        group.update(tpf);
     }
     @Override
     public void onTimerFinish(Timer timer) {
         for (int i = 0; i < particlesPerEmission; i++) {
             ParticleData p = new ParticleData(4f);
             p.setPosition(geometry.getWorldTranslation());
-            p.setColor(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
-            p.setVelocity(nextRandomVector().multLocal(2f));
+            p.color = new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA();
+            p.velocity = nextRandomVector().multLocal(2f);
             p.setScale(FastMath.rand.nextFloat(.05f, .2f));
             p.rotationSpeed = FastMath.rand.nextFloat(-20f, 20f);
             group.add(p);

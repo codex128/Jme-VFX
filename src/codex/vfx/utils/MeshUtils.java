@@ -4,8 +4,13 @@
  */
 package codex.vfx.utils;
 
+import com.jme3.math.Matrix3f;
+import com.jme3.math.Matrix4f;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.math.Vector4f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Format;
@@ -21,7 +26,11 @@ import java.nio.ShortBuffer;
  */
 public class MeshUtils {
     
-    public static void initializeVertexBuffer(Mesh mesh, Type type, Usage usage, Format format, Buffer data, int components) {
+    private static final Quaternion tempQuat = new Quaternion();
+    private static final Matrix3f tempMat3 = new Matrix3f();
+    private static final Matrix4f tempMat4 = new Matrix4f();
+    
+    public static VertexBuffer initializeVertexBuffer(Mesh mesh, Type type, Usage usage, Format format, Buffer data, int components) {
         VertexBuffer buf = mesh.getBuffer(type);
         if (buf != null) {
             buf.updateData(data);
@@ -30,7 +39,8 @@ public class MeshUtils {
             buf.setupData(usage, components, format, data);
             mesh.setBuffer(buf);
         }
-    }    
+        return buf;
+    }
     
     public static void updateVertexBuffer(Mesh mesh, Type type) {
         VertexBuffer buf = mesh.getBuffer(type);
@@ -47,6 +57,47 @@ public class MeshUtils {
     
     public static void writeVector3(FloatBuffer fb, Vector3f vector) {
         fb.put(vector.x).put(vector.y).put(vector.z);
+    }
+    
+    public static void writeVector4(FloatBuffer fb, Vector4f vector) {
+        fb.put(vector.x).put(vector.y).put(vector.z).put(vector.w);
+    }
+    
+    public static void writeMatrix4(FloatBuffer fb, Matrix4f matrix, boolean rowMajor) {
+        float[] mat = new float[16];
+        matrix.get(mat, rowMajor);
+        fb.put(mat);
+    }
+    
+    public static void writeTransformMatrix(FloatBuffer fb, Matrix4f matrix) {
+        matrix.toRotationMatrix(tempMat3);
+        tempQuat.fromRotationMatrix(tempMat3);
+        fb.put(matrix.m00);
+        fb.put(matrix.m10);
+        fb.put(matrix.m20);
+        fb.put(tempQuat.getX());
+        fb.put(matrix.m01);
+        fb.put(matrix.m11);
+        fb.put(matrix.m21);
+        fb.put(tempQuat.getY());
+        fb.put(matrix.m02);
+        fb.put(matrix.m12);
+        fb.put(matrix.m22);
+        fb.put(tempQuat.getZ());
+        fb.put(matrix.m03);
+        fb.put(matrix.m13);
+        fb.put(matrix.m23);
+        fb.put(tempQuat.getW());
+    }
+    
+    public static Matrix4f computeWorldMatrix(Transform transform) {
+        Matrix4f mat = new Matrix4f();
+        mat.setRotationQuaternion(transform.getRotation());
+        mat.setTranslation(transform.getTranslation());        
+        tempMat4.loadIdentity();
+        tempMat4.scale(transform.getScale());
+        mat.multLocal(tempMat4);
+        return mat;
     }
     
 }

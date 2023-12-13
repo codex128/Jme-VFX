@@ -5,6 +5,8 @@
 package codex.vfx.particles;
 
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 
 /**
@@ -16,71 +18,74 @@ import com.jme3.math.Vector3f;
  */
 public class ParticleData {
         
-    private float life = 1f, peakLife = life;
-    public Vector3f position = new Vector3f();
-    public Vector3f normal = new Vector3f(0, 1, 0);
+    private float life = 1f, maxLife = life;
+    private boolean alive = true;
+    public Transform transform = new Transform();
     public Vector3f velocity = new Vector3f();
+    public Vector3f angularVelocity = new Vector3f();
     public ColorRGBA color = new ColorRGBA(1, 1, 1, 1);
-    public float scale = .5f;
+    public float size = .5f;
     public float angle = 0f;
     public float rotationSpeed = 0f;
     public int spriteIndex = 0;
 
     public ParticleData() {}
     public ParticleData(float life) {
-        peakLife = this.life = life;
+        maxLife = this.life = life;
     }
-
-    public Vector3f getPosition() {
-        return position;
-    }
-    public Vector3f getNormal() {
-        return normal;
-    }
-    public Vector3f getVelocity() {
-        return velocity;
-    }
-    public ColorRGBA getColor() {
-        return color;
-    }
-    public float getScale() {
-        return scale;
-    }
+    
     public float getLife() {
         return life;
     }
-    public float getPeakLife() {
-        return peakLife;
+    public float getMaxLife() {
+        return maxLife;
     }
     public float getLifePercent() {
-        return life/peakLife;
+        return life/maxLife;
+    }
+    public Vector3f getPosition() {
+        return transform.getTranslation();
+    }
+    public Quaternion getRotation() {
+        return transform.getRotation();
+    }
+    public Vector3f getScale() {
+        return transform.getScale();
     }
 
-    public void setPosition(Vector3f position) {
-        this.position.set(position);
-    }
-    public void setNormal(Vector3f normal) {
-        this.normal.set(normal);
-    }
-    public void setVelocity(Vector3f velocity) {
-        this.velocity.set(velocity);
-    }
-    public void setColor(ColorRGBA color) {
-        this.color.set(color);
-    }
-    public void setScale(float radius) {
-        this.scale = radius;
-    }
     public void setLife(float life) {
-        peakLife = this.life = life;
+        maxLife = this.life = life;
     }
-    public boolean updateLife(float tpf) {
-        life -= tpf;
-        return isAlive();
+    public void setPosition(Vector3f position) {
+        transform.setTranslation(position);
+    }
+    public void setPosition(float x, float y, float z) {
+        transform.setTranslation(x, y, z);
+    }
+    public void setRotation(Quaternion rotation) {
+        transform.setRotation(rotation);
+    }
+    public void setScale(Vector3f scale) {
+        transform.setScale(scale);
+    }
+    public void setScale(float x, float y, float z) {
+        transform.setScale(x, y, z);
+    }
+    public void setScale(float scale) {
+        transform.setScale(scale);
     }
     
+    public void kill() {
+        // Setting a boolean instead of setting the life value directly
+        // because that may upset drivers performing "over lifetime" operations.
+        alive = false;
+    }
+    public boolean update(float rate) {
+        life -= rate;
+        return isAlive();
+    }
     public boolean isAlive() {
-        return life >= 0;
+        return life > 0 && alive;
     }
 
 }

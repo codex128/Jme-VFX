@@ -64,7 +64,7 @@ public class HitEffectDemo extends DemoApplication {
     }
     @Override
     public void demoUpdate(float tpf) {
-        group.updateMembers(tpf);
+        group.update(tpf);
         for (ParticleData p : group) {
             p.color.a = FastMath.clamp(p.getLifePercent(), 0f, 0f);
         }

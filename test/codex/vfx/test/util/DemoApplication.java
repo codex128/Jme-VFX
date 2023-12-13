@@ -8,6 +8,7 @@ import codex.boost.scene.SceneGraphIterator;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.state.VideoRecorderAppState;
 import com.jme3.environment.EnvironmentCamera;
 import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
@@ -18,6 +19,8 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.plugins.gltf.GltfModelKey;
+import java.io.File;
 
 /**
  *
@@ -76,6 +79,7 @@ public abstract class DemoApplication extends SimpleApplication {
         rootNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
         
     }
+    
     protected void setupCharacter() {
         character = assetManager.loadModel("Demo/YBot.j3o");
         character.setCullHint(Spatial.CullHint.Never);
@@ -97,10 +101,14 @@ public abstract class DemoApplication extends SimpleApplication {
         bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
         fpp.addFilter(bloom);
     }
+    protected void setupVideoCapture(String save) {
+        VideoRecorderAppState video = new VideoRecorderAppState();
+        video.setFile(new File(System.getProperty("user.home")+save));
+        stateManager.attach(video);
+    }
     protected void setViewDistance(float d) {
         cam.setLocation(Vector3f.UNIT_XYZ.normalize().multLocal(d));
     }
-    
     protected void enableLightProbes(boolean enable) {
         enableLightProbes = enable;
     }
