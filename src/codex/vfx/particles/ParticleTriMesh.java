@@ -6,6 +6,7 @@ package codex.vfx.particles;
 
 import codex.vfx.mesh.MeshPrototype;
 import codex.vfx.utils.MeshUtils;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -85,12 +86,13 @@ public class ParticleTriMesh extends Mesh {
         Vector3f vec = new Vector3f();
         Quaternion q = new Quaternion();
         for (ParticleData p : group) {
-            q.fromAngles(0f, 0f, p.angle);
+            q.fromAngles(0f, 0f, p.angle.get());
             for (Vector3f v : prototype.getVerts()) {
-                q.mult(v, vec).multLocal(p.size);
+                q.mult(v, vec).multLocal(p.size.get());
                 MeshUtils.writeVector3(positions, p.getPosition());
-                localPos.put(vec.x).put(vec.y).put(p.spriteIndex);
-                colors.put(p.color.r).put(p.color.g).put(p.color.b).put(p.color.a);
+                localPos.put(vec.x).put(vec.y).put(p.spriteIndex.get());
+                ColorRGBA c = p.color.get();
+                colors.put(c.r).put(c.g).put(c.b).put(c.a);
             }
         }        
         positions.flip();

@@ -34,17 +34,44 @@ public interface ParticleDriver <T extends ParticleData> {
     public void updateParticle(T particle, float tpf);
     
     /**
-     * Updates position based on velocity.
+     * Performs operations on a newly added particle.
+     * 
+     * @param particle 
+     */
+    public void particleAdded(T particle);
+    
+    /**
+     * Updates all {@link Value} objects by calling
+     * {@link ParticleData#updateValues(float)} on each particle.
+     */
+    public static final ParticleDriver ValueUpdate = new ParticleDriver() {
+        @Override
+        public void updateGroup(ParticleGroup group, float tpf) {}
+        @Override
+        public void updateParticle(ParticleData particle, float tpf) {
+            particle.updateValues(tpf);
+        }
+        @Override
+        public void particleAdded(ParticleData particle) {}
+    };
+    
+    /**
+     * Updates position based on linearVelocity.
      */
     public static final ParticleDriver Position = new ParticleDriver() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
         public void updateParticle(ParticleData particle, float tpf) {
-            particle.getPosition().addLocal(particle.velocity.mult(tpf));
+            particle.getPosition().addLocal(particle.linearVelocity.mult(tpf));
         }
+        @Override
+        public void particleAdded(ParticleData particle) {}
     };
     
+    /**
+     * Updates rotation based on angularVelocity.
+     */
     public static final ParticleDriver Rotation = new ParticleDriver() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
@@ -52,8 +79,44 @@ public interface ParticleDriver <T extends ParticleData> {
         public void updateParticle(ParticleData particle, float tpf) {
             particle.getRotation().multLocal(new Quaternion().fromAngles(particle.angularVelocity.x*tpf, particle.angularVelocity.y*tpf, particle.angularVelocity.z*tpf));
         }
+        @Override
+        public void particleAdded(ParticleData particle) {}
     };
     
+    /**
+     * Updates the color value for each particle.
+     */
+    public static final ParticleDriver Color = new ParticleDriver() {
+        @Override
+        public void updateGroup(ParticleGroup group, float tpf) {}
+        @Override
+        public void updateParticle(ParticleData particle, float tpf) {
+            particle.color.update(particle.getLifePercent(), tpf);
+        }
+        @Override
+        public void particleAdded(ParticleData particle) {}
+    };
+    
+    /**
+     * Updates angle based on rotation speed.
+     */
+    public static final ParticleDriver Angle = new ParticleDriver() {
+        @Override
+        public void updateGroup(ParticleGroup group, float tpf) {}
+        @Override
+        public void updateParticle(ParticleData particle, float tpf) {
+            particle.angle.set(particle.angle.get()+particle.rotationSpeed.get());
+        }
+        @Override
+        public void particleAdded(ParticleData particle) {}
+    };
+    
+    /**
+     * Returns a driver that applies a constant force to each particle.
+     * 
+     * @param force
+     * @return 
+     */
     public static ParticleDriver force(Vector3f force) {
         return new ConstantForce(force);
     }
@@ -70,8 +133,10 @@ public interface ParticleDriver <T extends ParticleData> {
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
         public void updateParticle(ParticleData particle, float tpf) {
-            particle.velocity.addLocal(force.mult(tpf));
+            particle.linearVelocity.addLocal(force.mult(tpf));
         }
+        @Override
+        public void particleAdded(ParticleData particle) {}
         
     }
     

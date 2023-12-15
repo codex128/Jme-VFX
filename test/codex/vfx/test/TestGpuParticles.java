@@ -10,7 +10,6 @@ import codex.vfx.opencl.PingPongImages;
 import codex.vfx.test.util.DemoApplication;
 import codex.vfx.utils.MeshUtils;
 import com.jme3.material.Material;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.opencl.Buffer;
 import com.jme3.opencl.CommandQueue;
@@ -34,7 +33,7 @@ import java.nio.FloatBuffer;
 public class TestGpuParticles extends DemoApplication {
     
     // Number of particles = this number squared.
-    private final int particleMapSize = 1024;
+    private final int particleMapSize = 1000;
     
     // Use images to store particle data as opposed to vertex buffers.
     // WARNING: If using buffers, exceeding 70,000 particles may cause
@@ -205,7 +204,7 @@ public class TestGpuParticles extends DemoApplication {
                     VertexBuffer.Format.Float, pb, 3);
             // color buffer
             FloatBuffer cb = BufferUtils.createFloatBuffer(capacity * 4);
-            MeshUtils.initializeVertexBuffer(mesh,
+            VertexBuffer b = MeshUtils.initializeVertexBuffer(mesh,
                     VertexBuffer.Type.Color,
                     VertexBuffer.Usage.Stream,
                     VertexBuffer.Format.Float, cb, 4);

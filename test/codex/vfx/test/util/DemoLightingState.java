@@ -43,7 +43,7 @@ public class DemoLightingState extends GameAppState {
     protected void init(Application app) {
         
         AmbientLight gi = new AmbientLight();
-        gi.setColor(new ColorRGBA(.1f, .1f, .1f, 1f));
+        gi.setColor(new ColorRGBA(.01f, .01f, .01f, 1f));
         rootNode.addLight(gi);
         
         DirectionalLight dl = new DirectionalLight();

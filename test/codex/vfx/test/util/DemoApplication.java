@@ -10,6 +10,9 @@ import com.jme3.anim.SkinningControl;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.VideoRecorderAppState;
 import com.jme3.environment.EnvironmentCamera;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -19,14 +22,14 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.plugins.gltf.GltfModelKey;
+import com.simsilica.lemur.GuiGlobals;
 import java.io.File;
 
 /**
  *
  * @author codex
  */
-public abstract class DemoApplication extends SimpleApplication {
+public abstract class DemoApplication extends SimpleApplication implements ActionListener {
     
     protected Spatial character;
     protected AnimComposer anim;
@@ -44,11 +47,16 @@ public abstract class DemoApplication extends SimpleApplication {
     @Override
     public void simpleInitApp() {
         
+        GuiGlobals.initialize(this);
+        DemoStyles.load(assetManager);
+        GuiGlobals.getInstance().getStyles().setDefaultStyle("demo");
+        GuiGlobals.getInstance().setCursorEventsEnabled(false);
+        
         flyCam.setMoveSpeed(7);
         setViewDistance(5);
         cam.lookAtDirection(Vector3f.UNIT_XYZ.negate(), Vector3f.UNIT_Y);
         
-        windowSize = new Vector2f();
+        windowSize = new Vector2f(context.getSettings().getWidth(), context.getSettings().getHeight());
         
         fpp = new FilterPostProcessor(assetManager);
         viewPort.addProcessor(fpp);
@@ -59,6 +67,7 @@ public abstract class DemoApplication extends SimpleApplication {
         );
         
         setupScene();
+        setupInputs();
         
         demoInitApp();
         
@@ -66,6 +75,13 @@ public abstract class DemoApplication extends SimpleApplication {
     @Override
     public void simpleUpdate(float tpf) {
         demoUpdate(tpf);
+    }
+    @Override
+    public void onAction(String name, boolean isPressed, float tpf) {
+        if (name.equals("lock-cursor") && isPressed) {
+            GuiGlobals.getInstance().setCursorEventsEnabled(!GuiGlobals.getInstance().isCursorEventsEnabled());
+            flyCam.setEnabled(!GuiGlobals.getInstance().isCursorEventsEnabled());
+        }
     }
     
     public abstract void demoInitApp();
@@ -78,6 +94,10 @@ public abstract class DemoApplication extends SimpleApplication {
         
         rootNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
         
+    }
+    private void setupInputs() {
+        inputManager.addMapping("lock-cursor", new KeyTrigger(KeyInput.KEY_P));
+        inputManager.addListener(this, "lock-cursor");
     }
     
     protected void setupCharacter() {

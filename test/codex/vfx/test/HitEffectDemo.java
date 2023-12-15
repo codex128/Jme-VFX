@@ -66,7 +66,7 @@ public class HitEffectDemo extends DemoApplication {
     public void demoUpdate(float tpf) {
         group.update(tpf);
         for (ParticleData p : group) {
-            p.color.a = FastMath.clamp(p.getLifePercent(), 0f, 0f);
+            p.color.get().a = FastMath.clamp(p.getLifePercent(), 0f, 0f);
         }
     }
     
@@ -75,7 +75,7 @@ public class HitEffectDemo extends DemoApplication {
         if (group.add(p)) {
             p.setPosition(geometry.getWorldTranslation());
             p.setScale(.2f);
-            p.angle = FastMath.rand.nextFloat(FastMath.TWO_PI);
+            p.angle.set(FastMath.rand.nextFloat(FastMath.TWO_PI));
         }
     }
     

@@ -4,10 +4,10 @@
  */
 package codex.vfx.utils;
 
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Matrix3f;
 import com.jme3.math.Matrix4f;
 import com.jme3.math.Quaternion;
-import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
@@ -71,6 +71,7 @@ public class MeshUtils {
     
     public static void writeTransformMatrix(FloatBuffer fb, Matrix4f matrix) {
         matrix.toRotationMatrix(tempMat3);
+        tempMat3.invertLocal();
         tempQuat.fromRotationMatrix(tempMat3);
         fb.put(matrix.m00);
         fb.put(matrix.m10);
@@ -90,14 +91,8 @@ public class MeshUtils {
         fb.put(tempQuat.getW());
     }
     
-    public static Matrix4f computeWorldMatrix(Transform transform) {
-        Matrix4f mat = new Matrix4f();
-        mat.setRotationQuaternion(transform.getRotation());
-        mat.setTranslation(transform.getTranslation());        
-        tempMat4.loadIdentity();
-        tempMat4.scale(transform.getScale());
-        mat.multLocal(tempMat4);
-        return mat;
+    public static void writeColor(FloatBuffer fb, ColorRGBA color) {
+        fb.put(color.r).put(color.g).put(color.b).put(color.a);
     }
     
 }

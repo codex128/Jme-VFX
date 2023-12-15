@@ -187,12 +187,12 @@ public class TrailingGeometry extends Geometry {
                 // hardware normals
                 MeshUtils.writeVector3(positions, data.getPosition());
                 MeshUtils.writeVector3(positions, data.getPosition());
-                MeshUtils.writeVector4(axis, buildVector4f(rotAxis, data.size));
-                MeshUtils.writeVector4(axis, buildVector4f(rotAxis, -data.size));
+                MeshUtils.writeVector4(axis, buildVector4f(rotAxis, data.size.get()));
+                MeshUtils.writeVector4(axis, buildVector4f(rotAxis, -data.size.get()));
             } else {
                 // software normals
                 Vector3f across = rotAxis.cross(data.getRotation().mult(Vector3f.UNIT_Z))
-                        .normalizeLocal().multLocal(data.size);
+                        .normalizeLocal().multLocal(data.size.get());
                 Vector3f neg = across.negate().addLocal(data.getPosition());
                 across.addLocal(data.getPosition());
                 MeshUtils.writeVector3(positions, across);
@@ -202,7 +202,7 @@ public class TrailingGeometry extends Geometry {
             }
             info.put(life).put(life);
             life += lifeIncr;
-            int abgr = data.color.asIntABGR();
+            int abgr = data.color.get().asIntABGR();
             colors.putInt(abgr);
             colors.putInt(abgr);
         }

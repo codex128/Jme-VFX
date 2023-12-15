@@ -4,6 +4,7 @@
  */
 package codex.vfx.particles;
 
+import codex.vfx.utils.Value;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Transform;
@@ -17,17 +18,23 @@ import com.jme3.math.Vector3f;
  * @author codex
  */
 public class ParticleData {
-        
-    private float life = 1f, maxLife = life;
-    private boolean alive = true;
+    
+    protected float life = 1f, maxLife = life;
+    protected boolean alive = true;
     public Transform transform = new Transform();
-    public Vector3f velocity = new Vector3f();
+    public Vector3f linearVelocity = new Vector3f();
     public Vector3f angularVelocity = new Vector3f();
-    public ColorRGBA color = new ColorRGBA(1, 1, 1, 1);
-    public float size = .5f;
-    public float angle = 0f;
-    public float rotationSpeed = 0f;
-    public int spriteIndex = 0;
+//    public ColorRGBA color = new ColorRGBA(1, 1, 1, 1);
+//    public float size = .5f;
+//    public float angle = 0f;
+//    public float rotationSpeed = 0f;
+//    public int spriteIndex = 0;
+    
+    public Value<ColorRGBA> color = Value.value(ColorRGBA.White);
+    public Value<Float> size = Value.value(1f);
+    public Value<Float> angle = Value.value(0f);
+    public Value<Float> rotationSpeed = Value.value(0f);
+    public Value<Integer> spriteIndex = Value.value(0);
 
     public ParticleData() {}
     public ParticleData(float life) {
@@ -56,23 +63,29 @@ public class ParticleData {
     public void setLife(float life) {
         maxLife = this.life = life;
     }
-    public void setPosition(Vector3f position) {
+    public Vector3f setPosition(Vector3f position) {
         transform.setTranslation(position);
+        return transform.getTranslation();
     }
-    public void setPosition(float x, float y, float z) {
+    public Vector3f setPosition(float x, float y, float z) {
         transform.setTranslation(x, y, z);
+        return transform.getTranslation();
     }
-    public void setRotation(Quaternion rotation) {
+    public Quaternion setRotation(Quaternion rotation) {
         transform.setRotation(rotation);
+        return transform.getRotation();
     }
-    public void setScale(Vector3f scale) {
+    public Vector3f setScale(Vector3f scale) {
         transform.setScale(scale);
+        return transform.getScale();
     }
-    public void setScale(float x, float y, float z) {
+    public Vector3f setScale(float x, float y, float z) {
         transform.setScale(x, y, z);
+        return transform.getScale();
     }
-    public void setScale(float scale) {
+    public Vector3f setScale(float scale) {
         transform.setScale(scale);
+        return transform.getScale();
     }
     
     public void kill() {
@@ -80,9 +93,17 @@ public class ParticleData {
         // because that may upset drivers performing "over lifetime" operations.
         alive = false;
     }
-    public boolean update(float rate) {
-        life -= rate;
+    public boolean update(float tpf) {
+        life = Math.max(life-tpf, 0);
         return isAlive();
+    }
+    public void updateValues(float tpf) {
+        float l = getLifePercent();
+        color.update(l, tpf);
+        size.update(l, tpf);
+        angle.update(l, tpf);
+        rotationSpeed.update(l, tpf);
+        spriteIndex.update(l, tpf);
     }
     public boolean isAlive() {
         return life > 0 && alive;

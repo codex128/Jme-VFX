@@ -70,10 +70,10 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
         for (int i = 0; i < particlesPerEmission; i++) {
             ParticleData p = new ParticleData(4f);
             p.setPosition(geometry.getWorldTranslation());
-            p.color = new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA();
-            p.velocity = nextRandomVector().multLocal(2f);
+            p.color.set(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
+            p.linearVelocity = nextRandomVector().multLocal(2f);
             p.setScale(FastMath.rand.nextFloat(.05f, .2f));
-            p.rotationSpeed = FastMath.rand.nextFloat(-20f, 20f);
+            p.rotationSpeed.set(FastMath.rand.nextFloat(-20f, 20f));
             group.add(p);
         }
     }
