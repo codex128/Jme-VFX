@@ -4,7 +4,6 @@
  */
 package codex.vfx.particles;
 
-import codex.vfx.particles.drivers.emission.ParticleFactory;
 import codex.vfx.particles.drivers.emission.EmissionVolume;
 import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.particles.drivers.emission.EmissionPoint;
@@ -15,7 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * Contains a group of particles and properties thereof.
+ * Contains a group of particles.
  * 
  * @author codex
  * @param <T> type of particle data this group uses
@@ -25,11 +24,10 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     private final ArrayList<T> particles = new ArrayList<>();
     private final LinkedList<ParticleDriver<T>> drivers = new LinkedList<>();
     private OverflowProtocol overflow = OverflowProtocol.CULL_NEW;
-    private ParticleFactory<T> factory;
     private EmissionVolume volume = new EmissionPoint();
     private final int capacity;
     private float updateSpeed = 1f, decay = 1f;
-    private float time = 0f;
+    private float time = 0f, delay = 0f;
     
     public ParticleGroup(int capacity) {
         if (capacity < 1) {
@@ -49,6 +47,9 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     public void update(float tpf) {
         float t = tpf*updateSpeed;
         time += t;
+        // Time will not move for drivers when the time value
+        // is in the delay zone.
+        t *= (time >= delay ? 1 : 0);
         for (ParticleDriver<T> d : drivers) {
             d.updateGroup(this, t);
         }
@@ -70,7 +71,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     private boolean addParticle(T particle) {
         if (particles.add(particle)) {
             for (ParticleDriver<T> d : drivers) {
-                d.particleAdded(particle);
+                d.particleAdded(this, particle);
             }
             return true;
         }
@@ -79,7 +80,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     private void addParticle(T particle, int index) {
         particles.add(index, particle);
         for (ParticleDriver<T> d : drivers) {
-            d.particleAdded(particle);
+            d.particleAdded(this, particle);
         }
     }
     
@@ -124,7 +125,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
         if (this.particles.size()+particles.size() <= capacity) {
             this.particles.addAll(particles);
             for (T p : particles) for (ParticleDriver<T> d : drivers) {
-                d.particleAdded(p);
+                d.particleAdded(this, p);
             }
             return particles.size();
         }
@@ -152,42 +153,6 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      */
     public void clearAllParticles() {
         particles.clear();
-    }
-    
-    /**
-     * Spawn a particle using this group's particle factory, emission volume, and world transform.
-     * <p>
-     * The spawned particle is added to this group.
-     * 
-     * @return spawned particle
-     */
-    public T spawnParticle() {
-        return spawnParticle(true);
-    }
-    /**
-     * Spawn a particle using this group's particle factory, emission volume, and world transform.
-     * <p>
-     * The spawned particle is added to this group only if indicated.
-     * 
-     * @param add if true, the spawned particle is added to this group
-     * @return spawned particle
-     */
-    public T spawnParticle(boolean add) {
-        T p = factory.createParticle(worldTransform, volume);
-        if (add) add(p);
-        return p;
-    }
-    /**
-     * Spawn a number of particles using this group's particle factory, emission volume, and world transform.
-     * <p>
-     * The spawned particles are added to this group.
-     * 
-     * @param n number of particles to spawn
-     */
-    public void spawnParticles(int n) {
-        while (n-- > 0) {
-            add(factory.createParticle(worldTransform, volume));
-        }
     }
     
     /**
@@ -232,6 +197,8 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     /**
      * Sets the protocol for when an added particle would make
      * the group's size exceed its capacity.
+     * <p>
+     * default={@link OverflowProtocol#CULL_NEW}
      * 
      * @param overflow 
      */
@@ -239,16 +206,9 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
         this.overflow = overflow;
     }
     /**
-     * Set the default particle factory used by this particle group and subsiquent drivers.
-     * 
-     * @param factory particle factory (not null)
-     */
-    public void setFactory(ParticleFactory<T> factory) {
-        assert factory != null : "Factory cannot be null.";
-        this.factory = factory;
-    }
-    /**
      * Set the default emission volume used by this particle group and subsiquent drivers.
+     * <p>
+     * default={@link EmissionPoint}
      * 
      * @param volume emission volume (not null)
      */
@@ -259,7 +219,8 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     /**
      * Sets the rate at which particles update.
      * <p>
-     * This value is propogated to drivers through {@code tpf}.
+     * This value is propogated to drivers through {@code tpf}.<br>
+     * default=1.0
      * 
      * @param speed 
      */
@@ -271,27 +232,37 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * <p>
      * Decay=1 means particles lose one "life point" each second.
      * Decay=2, particles lose two points each second.
-     * <p>
      * A decay of zero allows particles to exist indefinitely.
+     * <p>
+     * default=1.0
      * 
      * @param decay 
      */
     public void setDecayRate(float decay) {
         this.decay = decay;
     }
+    /**
+     * Sets the initial delay in seconds.
+     * <p>
+     * default=0.0 (no delay)
+     * 
+     * @param delay 
+     */
+    public void setInitialDelay(float delay) {
+        this.delay = delay;
+    }
     
     /**
      * Resets the simulation by removing all particles and reseting the simulation time.
+     * <p>
+     * Drivers are also notified.
      */
     public void resetSimulation() {
         particles.clear();
         time = 0;
-    }
-    /**
-     * Resets the simulation time.
-     */
-    public void resetTime() {
-        time = 0;
+        for (ParticleDriver<T> d : drivers) {
+            d.groupReset(this);
+        }
     }
     
     public ParticleData get(int i) {
@@ -302,9 +273,6 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     }
     public OverflowProtocol getOverflowHint() {
         return overflow;
-    }
-    public ParticleFactory<T> getFactory() {
-        return factory;
     }
     public EmissionVolume getVolume() {
         return volume;
@@ -324,7 +292,14 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     public float getDecayRate() {
         return decay;
     }
+    public float getInitialDelay() {
+        return delay;
+    }
+    
     public float getTime() {
+        return Math.max(time-delay, 0f);
+    }
+    public float getRawTime() {
         return time;
     }
 

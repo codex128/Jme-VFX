@@ -4,6 +4,7 @@
  */
 package codex.vfx.particles.drivers.emission;
 
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 
 /**
@@ -14,8 +15,8 @@ import com.jme3.math.Vector3f;
 public class EmissionPoint implements EmissionVolume {
     
     @Override
-    public Vector3f getNextPosition() {
-        return Vector3f.ZERO;
+    public Vector3f getNextPosition(Transform transform) {
+        return transform.getTranslation();
     }
     
 }

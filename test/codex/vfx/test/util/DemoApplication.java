@@ -96,7 +96,7 @@ public abstract class DemoApplication extends SimpleApplication implements Actio
         
     }
     private void setupInputs() {
-        inputManager.addMapping("lock-cursor", new KeyTrigger(KeyInput.KEY_P));
+        inputManager.addMapping("lock-cursor", new KeyTrigger(KeyInput.KEY_1));
         inputManager.addListener(this, "lock-cursor");
     }
     

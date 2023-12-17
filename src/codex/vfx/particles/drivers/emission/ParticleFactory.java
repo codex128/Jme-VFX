@@ -5,16 +5,21 @@
 package codex.vfx.particles.drivers.emission;
 
 import codex.vfx.particles.ParticleData;
-import com.jme3.math.Transform;
+import codex.vfx.particles.ParticleGroup;
+import codex.vfx.particles.drivers.ParticleDriver;
 
 /**
- * Creates particles.
  * 
  * @author codex
  * @param <T> type of particle data
  */
-public interface ParticleFactory <T extends ParticleData> {
-    
-    public T createParticle(Transform transform, EmissionVolume volume);
+public abstract class ParticleFactory <T extends ParticleData> implements ParticleDriver<T> {
+
+    @Override
+    public void updateGroup(ParticleGroup<T> group, float tpf) {}
+    @Override
+    public void updateParticle(T particle, float tpf) {}
+    @Override
+    public void groupReset(ParticleGroup<T> group) {}
     
 }

@@ -34,6 +34,8 @@ public class TweenDriver implements ParticleDriver {
     @Override
     public void updateParticle(ParticleData particle, float tpf) {}
     @Override
-    public void particleAdded(ParticleData particle) {}
+    public void particleAdded(ParticleGroup group, ParticleData particle) {}
+    @Override
+    public void groupReset(ParticleGroup group) {}
     
 }

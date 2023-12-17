@@ -34,7 +34,7 @@ public class ParticleData {
     public Value<Float> size = Value.value(1f);
     public Value<Float> angle = Value.value(0f);
     public Value<Float> rotationSpeed = Value.value(0f);
-    public Value<Integer> spriteIndex = Value.value(0);
+    public Value<Byte> spriteIndex = Value.value((byte)0);
 
     public ParticleData() {}
     public ParticleData(float life) {

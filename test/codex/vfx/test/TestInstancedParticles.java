@@ -13,16 +13,20 @@ import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.particles.tweens.LinearInterpolator;
 import codex.vfx.test.util.DemoApplication;
 import codex.vfx.utils.Range;
-import codex.vfx.utils.VfxMath;
+import codex.vfx.utils.VfxUtils;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Easing;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
+import com.simsilica.lemur.Axis;
+import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Container;
+import com.simsilica.lemur.HAlignment;
 import com.simsilica.lemur.Insets3f;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.Slider;
@@ -39,7 +43,9 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
     private float time = 0f;
     private ParticleGroup group;
     private Generator gen = new Generator();
-    private VersionedReference<Double> speedRef;
+    private VersionedReference<Double>
+            rateRef, speedRef, impulseRef, lifeRef, airRef,
+            angImpRef, chunkRef, gravityRef;
     
     public static void main(String[] args) {
         new TestInstancedParticles().start();
@@ -50,14 +56,14 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
         
         //setupVideoCapture("/Videos/instanced-monkeys.avi");
         
-        group = new ParticleGroup(100);
+        group = new ParticleGroup(1000);
         group.setOverflowProtocol(OverflowProtocol.CULL_OLD);
         group.setDecayRate(1);
         group.addDriver(this);
         group.addDriver(ParticleDriver.ValueUpdate);
         group.addDriver(ParticleDriver.Position);
         group.addDriver(ParticleDriver.Rotation);
-        group.addDriver(ParticleDriver.force(new Vector3f(0f, -5f, 0f)));
+        //group.addDriver(ParticleDriver.force(new Vector3f(0f, -5f, 0f)));
         
         Spatial model = assetManager.loadModel("Models/monkey.j3o");
         Mesh mesh = null;
@@ -82,28 +88,34 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
         
         InstancedParticleGeometry geometry = new InstancedParticleGeometry(group, mesh);
         geometry.setShadowMode(RenderQueue.ShadowMode.Off);
-        geometry.setCullHint(Spatial.CullHint.Never);
         geometry.setMaterial(material);
         rootNode.attachChild(geometry);
         
         //enableLightProbes(false);
         //enableShadows(false);
         
+        Container main = new Container();
+        main.setLocalTranslation(10, windowSize.y-10, 0);
         Container sliders = new Container();
+        sliders.setBackground(null);
         sliders.setLayout(new SpringGridLayout());
-        sliders.setLocalTranslation(10, windowSize.y-10, 0);
-        Slider speed = new Slider();
-        speed.setAlpha(1f);
-        speed.getModel().setMinimum(0);
-        speed.getModel().setMaximum(2);
-        speed.getModel().setValue(1);
-        speed.getRangePanel().setPreferredSize(new Vector3f(200, 0, 0));
-        speed.setInsets(new Insets3f(3, 50, 3, 5));
-        speedRef = speed.getModel().createReference();
-        Label speedLabel = new Label("Update Speed");
-        sliders.addChild(speedLabel, 0, 0).setInsets(new Insets3f(3, 10, 3, 20));
-        sliders.addChild(speed, 0, 1);
-        guiNode.attachChild(sliders);
+        speedRef = createSlider(sliders, 0, "Update Speed", 1f, 0f, 2f);
+        impulseRef = createSlider(sliders, 1, "Impulse", 7f, 0f, 30f);
+        rateRef = createSlider(sliders, 2, "Rate", .05f, 0f, 3f);
+        lifeRef = createSlider(sliders, 3, "Lifetime", 3f, .1f, 10f);
+        airRef = createSlider(sliders, 4, "Air Resistance", .9f, 0f, 3f);
+        angImpRef = createSlider(sliders, 5, "Angular Impulse", 10f, 0f, 50f);
+        chunkRef = createSlider(sliders, 6, "Particles per Emission", 1, 0, 20);
+        gravityRef = createSlider(sliders, 7, "Gravity", 5f, 0f, 20f);
+        main.addChild(sliders);
+        Container buttons = new Container();
+        buttons.setBackground(null);
+        buttons.setLayout(new SpringGridLayout(Axis.X, Axis.Y));
+        buttons.addChild(new Button("Reset")).addClickCommands((Button source) -> {
+            group.resetSimulation();
+        });
+        main.addChild(buttons);
+        guiNode.attachChild(main);
     
     }
     @Override
@@ -115,31 +127,50 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
     }
     @Override
     public void updateGroup(ParticleGroup group, float tpf) {
-        time -= tpf;
-        if (time < 0) {
+        time += tpf;
+        if (time > rateRef.get().floatValue()) for (int i = 0, n = chunkRef.get().intValue(); i < n; i++) {
             ParticleData p = new ParticleData();
             p.setPosition(new Vector3f(0f, 2f, 0f));
-            gen.nextUnitVector3f(p.linearVelocity).multLocal(7f);
-            gen.nextUnitVector3f(p.angularVelocity).multLocal(10f);
-            p.setLife(3f);
+            gen.nextUnitVector3f(p.linearVelocity).multLocal(impulseRef.get().floatValue());
+            gen.nextUnitVector3f(p.angularVelocity).multLocal(angImpRef.get().floatValue());
+            p.setLife(lifeRef.get().floatValue());
             p.setScale(.4f);
             p.color = new Range(
                 ColorRGBA.Black,
                 ColorRGBA.randomColor(),
                 LinearInterpolator.Color,
-                Easing.linear
+                Easing.inCubic
             );
-            p.size.set(VfxMath.gen.nextFloat(.8f, 1.2f));
+            p.size.set(VfxUtils.gen.nextFloat(.8f, 1.2f));
             group.add(p);
-            time = .05f;
+            time = 0;
         }
     }
     @Override
     public void updateParticle(ParticleData particle, float tpf) {
-        particle.linearVelocity.multLocal(1f-0.9f*tpf);
-        particle.angularVelocity.multLocal(1f-0.9f*tpf);
+        particle.linearVelocity.addLocal(0f, -gravityRef.get().floatValue()*tpf, 0f);
+        float resist = FastMath.clamp(1f-(airRef.get().floatValue()*tpf), 0, 1);
+        particle.linearVelocity.multLocal(resist);
+        particle.angularVelocity.multLocal(resist);
     }
     @Override
-    public void particleAdded(ParticleData particle) {}
+    public void particleAdded(ParticleGroup group, ParticleData particle) {}
+    @Override
+    public void groupReset(ParticleGroup group) {}
+    
+    private VersionedReference<Double> createSlider(Container c, int row, String label, float value, float min, float max) {
+        Slider s = new Slider();
+        s.getModel().setMinimum(min);
+        s.getModel().setMaximum(max);
+        s.getModel().setValue(value);
+        s.getRangePanel().setPreferredSize(new Vector3f(200, 0, 0));
+        s.setInsets(new Insets3f(3, 3, 3, 5));
+        Label l = new Label(label);
+        l.setInsets(new Insets3f(3, 15, 3, 5));
+        l.setTextHAlignment(HAlignment.Right);
+        c.addChild(l, row, 0);
+        c.addChild(s, row, 1);
+        return s.getModel().createReference();
+    }
     
 }

@@ -4,7 +4,8 @@
  */
 package codex.vfx.particles.drivers.emission;
 
-import codex.vfx.utils.VfxMath;
+import codex.vfx.utils.VfxUtils;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 
 /**
@@ -31,8 +32,10 @@ public class EmissionSphere implements EmissionVolume {
     }
     
     @Override
-    public Vector3f getNextPosition() {
-        return VfxMath.getGenerator().nextUnitVector3f().multLocal(VfxMath.getGenerator().nextFloat(radius));
+    public Vector3f getNextPosition(Transform transform) {
+        return VfxUtils.getGenerator().nextUnitVector3f()
+                .multLocal(VfxUtils.getGenerator().nextFloat(radius))
+                .addLocal(transform.getTranslation());
     }
 
     public void setCenter(Vector3f center) {

@@ -10,8 +10,8 @@ import codex.boost.TimerListener;
 import codex.vfx.mesh.MeshPrototype;
 import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.particles.ParticleData;
-import codex.vfx.particles.ParticleGeometry;
 import codex.vfx.particles.ParticleGroup;
+import codex.vfx.particles.TriParticleGeometry;
 import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.test.util.DemoApplication;
 import com.jme3.material.Material;
@@ -28,7 +28,7 @@ import com.jme3.scene.Spatial;
 public class TestBasicParticles extends DemoApplication implements TimerListener {
     
     private ParticleGroup<ParticleData> group;
-    private ParticleGeometry geometry;
+    private TriParticleGeometry geometry;
     private final Timer timer = new Timer(.1f);
     private final int particlesPerEmission = 5;
     private final float gravity = 5f;
@@ -45,7 +45,7 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
         group.addDriver(ParticleDriver.force(new Vector3f(0f, -3f, 0f)));
         group.addDriver(ParticleDriver.Position);
         
-        geometry = new ParticleGeometry(group, MeshPrototype.QUAD);
+        geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
         geometry.setLocalTranslation(0, 3, 0);
         geometry.setCullHint(Spatial.CullHint.Never);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);

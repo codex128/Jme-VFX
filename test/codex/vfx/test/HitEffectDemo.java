@@ -7,8 +7,8 @@ package codex.vfx.test;
 import codex.vfx.mesh.MeshPrototype;
 import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.particles.ParticleData;
-import codex.vfx.particles.ParticleGeometry;
 import codex.vfx.particles.ParticleGroup;
+import codex.vfx.particles.TriParticleGeometry;
 import codex.vfx.test.util.DemoApplication;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
@@ -26,7 +26,7 @@ import com.jme3.scene.Spatial;
 public class HitEffectDemo extends DemoApplication {
     
     private ParticleGroup<ParticleData> group;
-    private ParticleGeometry geometry;
+    private TriParticleGeometry geometry;
     
     public static void main(String[] args) {
         new HitEffectDemo().start();
@@ -38,7 +38,7 @@ public class HitEffectDemo extends DemoApplication {
         group = new ParticleGroup(2);
         group.setOverflowProtocol(OverflowProtocol.CULL_OLD);
         
-        geometry = new ParticleGeometry(group, MeshPrototype.QUAD);
+        geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
         geometry.setLocalTranslation(0, 3, 0);
         geometry.setCullHint(Spatial.CullHint.Never);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);

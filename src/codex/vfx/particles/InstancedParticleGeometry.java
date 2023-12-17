@@ -10,6 +10,7 @@ import com.jme3.math.Matrix4f;
 import com.jme3.math.Transform;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
 import java.nio.FloatBuffer;
@@ -21,7 +22,7 @@ import java.nio.FloatBuffer;
 public class InstancedParticleGeometry extends Geometry {
     
     private ParticleGroup<ParticleData> group;
-    private Transform transform = new Transform();
+    private final Transform transform = new Transform();
     private int capacity = -1;
     
     
@@ -29,7 +30,7 @@ public class InstancedParticleGeometry extends Geometry {
         super();
         this.group = group;
         super.setMesh(mesh);
-        //initBuffers();
+        setCullHint(Spatial.CullHint.Never);
         setIgnoreTransform(true);
     }
     
@@ -73,7 +74,7 @@ public class InstancedParticleGeometry extends Geometry {
             }
         } else {
             MeshUtils.writeMatrix4(instances, Matrix4f.IDENTITY, false);
-            MeshUtils.writeColor(colors, ColorRGBA.Black);
+            MeshUtils.writeColor(colors, ColorRGBA.BlackNoAlpha);
         }
         instances.flip();
         ivb.updateData(instances);

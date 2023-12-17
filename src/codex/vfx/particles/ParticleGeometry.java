@@ -4,44 +4,53 @@
  */
 package codex.vfx.particles;
 
-import codex.vfx.mesh.MeshPrototype;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 
 /**
  *
  * @author codex
+ * @param <T>
  */
-public class ParticleGeometry extends Geometry {
+public abstract class ParticleGeometry <T extends ParticleData> extends Geometry {
     
-    private final ParticleGroup<ParticleData> group;
-    private final MeshPrototype prototype;
-    private ParticleTriMesh pMesh;
+    protected ParticleGroup<T> group;
+    protected int capacity = -1;
+    protected boolean useSpriteSheet = false;
     
-    public ParticleGeometry(ParticleGroup group, MeshPrototype prototype) {
+    public ParticleGeometry(ParticleGroup<T> group) {
         this.group = group;
-        this.prototype = prototype;
-        pMesh = new ParticleTriMesh();
-        super.setMesh(pMesh);
-        pMesh.initBuffers(group, prototype);
+        super.setMesh(new Mesh());
         setIgnoreTransform(true);
     }
     
     @Override
     public void updateLogicalState(float tpf) {
-        pMesh.updateMesh(group, prototype);
-    }
-    @Override
-    public void setMesh(Mesh mesh) {
-        if (!(mesh instanceof ParticleTriMesh)) {
-            throw new IllegalArgumentException("Requires ParticleMesh.");
+        if (capacity != group.capacity()) {
+            capacity = group.capacity();
+            initBuffers();
         }
-        super.setMesh(mesh);
-        pMesh = (ParticleTriMesh)this.mesh;
+        updateMesh();
     }
     @Override
-    public ParticleTriMesh getMesh() {
-        return pMesh;
+    public void setMesh(Mesh mesh) {}
+    
+    protected abstract void initBuffers();
+    protected abstract void updateMesh();
+    
+    public void setParticleGroup(ParticleGroup<T> group) {
+        assert group != null : "Particle group cannot be null";
+        this.group = group;
+    }
+    public void enableSpriteSheet(boolean enable) {
+        useSpriteSheet = enable;
+    }
+    
+    public ParticleGroup<T> getGroup() {
+        return group;
+    }
+    public boolean isSpriteSheetEnabled() {
+        return useSpriteSheet;
     }
     
 }

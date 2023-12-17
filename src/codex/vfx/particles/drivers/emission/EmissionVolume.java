@@ -4,8 +4,9 @@
  */
 package codex.vfx.particles.drivers.emission;
 
+import codex.vfx.particles.ParticleData;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Mesh;
 
 /**
  * Generates positions to spawn particles at.
@@ -14,8 +15,9 @@ import com.jme3.scene.Mesh;
  * responsibility of whatever spawned the particles to manage.
  * 
  * @author codex
+ * @param <T>
  */
-public interface EmissionVolume {
+public interface EmissionVolume <T extends ParticleData> {
     
     /**
      * Returns the next position a particle should be spawned at.
@@ -23,17 +25,9 @@ public interface EmissionVolume {
      * Do not modify the returned object. Implementations may want to
      * return constants in order to not create many temporary vector instances.
      * 
+     * @param transform
      * @return 
      */
-    public Vector3f getNextPosition();
-    
-    /**
-     * Generates a debug mesh matching roughly the volume in which particles are spawned.
-     * 
-     * @return debug mesh, or null if this feature is not supported
-     */
-    public default Mesh createDebugMesh() {
-        return null;
-    }
+    public Vector3f getNextPosition(Transform transform);
     
 }

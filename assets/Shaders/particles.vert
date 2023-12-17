@@ -8,40 +8,59 @@ uniform vec3 g_CameraPosition;
 uniform vec3 g_CameraUp;
 
 attribute vec3 inPosition;
-attribute vec2 inTexCoord;
-attribute vec3 inTexCoord2;
 attribute vec4 inColor;
 
 varying vec3 wPosition;
-varying vec3 wNormal;
-varying vec2 texCoord;
 varying vec4 vertexColor;
 
-#if defined(COLORMAP) && defined(USE_SPRITE_SHEET)
-    uniform vec2 m_SpriteGrid;
+#ifndef POINT_SPRITE
+    attribute vec2 inTexCoord2;
+    varying vec3 wNormal;
+#endif
+
+#ifdef COLORMAP
+    #ifndef POINT_SPRITE
+        attribute vec2 inTexCoord;
+    #endif
+    varying vec4 texCoord;
+    #ifdef USE_SPRITE_SHEET
+        attribute int inTexCoord3;
+        uniform vec2 m_SpriteGrid;
+    #endif
 #endif
 
 void main(){
     
     vec4 modelSpacePos = vec4(inPosition, 1.0);
     texCoord = inTexCoord;
-    vertexColor = inColor;
-    
-    // billboard
+    vertexColor = inColor;    
     wPosition = (g_WorldMatrix * modelSpacePos).xyz;
-    wNormal = normalize(g_CameraPosition - wPosition);
-    vec3 across = cross(wNormal, g_CameraUp);
-    wPosition -= across * inTexCoord2.x - g_CameraUp * inTexCoord2.y;
+    
+    #ifndef POINT_SPRITE
+        wNormal = normalize(g_CameraPosition - wPosition);
+        vec3 across = cross(wNormal, g_CameraUp);
+        wPosition -= across * inTexCoord2.x - g_CameraUp * inTexCoord2.y;
+    #endif
+    
     gl_Position = g_ViewProjectionMatrix * vec4(wPosition, 1.0);
     
-    //modelSpacePos.xy += inTexCoord2.xy;
-    //gl_Position = g_WorldViewProjectionMatrix * vec4(inPosition, 1.0);
-    
-    // texture coordinates
-    //#if defined(COLORMAP) && defined(USE_SPRITE_SHEET)
-    //    texCoord /= m_SpriteGrid;
-    //    texCoord.x += mod(inTexCoord2.z, m_SpriteGrid.x) / m_SpriteGrid.x;
-    //    texCoord.y += floor(inTexCoord2.z / m_SpriteGrid.x) / m_SpriteGrid.y;
-    //#endif
+    #ifdef COLORMAP
+        #ifndef POINT_SPRITE
+            texCoord = vec4(inTexCoord.x, inTexCoord.y, 0.0, 0.0);
+        #else
+            texCoord = vec4(0.0, 0.0, 1.0, 1.0);
+        #endif
+        #ifdef USE_SPRITE_SHEET
+            #ifndef POINT_SPRITE
+                texCoord.xy /= m_SpriteGrid;
+            #endif
+            float index = float(inTexCoord3);
+            texCoord.x += mod(index, m_SpriteGrid.x) / m_SpriteGrid.x;
+            texCoord.y += floor(index / m_SpriteGrid.x) / m_SpriteGrid.y;
+            #ifdef POINT_SPRITE
+                texCoord.zw = texCoord.xy + (vec2(1.0) / m_SpriteGrid);
+            #endif
+        #endif
+    #endif
     
 }

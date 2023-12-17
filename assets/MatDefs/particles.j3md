@@ -1,8 +1,9 @@
 MaterialDef Simple {
     MaterialParameters {
         Texture2D ColorMap
-        Float AlphaDiscard : 0.2
+        Float AlphaDiscard
         Vector2 SpriteGrid
+        Boolean PointSprite
     }
     Technique {
         VertexShader   GLSL330 GLSL120 GLSL100 : Shaders/particles.vert
@@ -17,6 +18,8 @@ MaterialDef Simple {
         Defines {
             COLORMAP : ColorMap
             USE_SPRITE_SHEET : SpriteGrid
+            POINT_SPRITE : PointSprite
+            ALPHA_DISCARD : AlphaDiscard
         }
     }
 }
