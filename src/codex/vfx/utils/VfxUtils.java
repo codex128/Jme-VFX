@@ -93,7 +93,7 @@ public class VfxUtils {
         store.set(vec).normalizeLocal().multLocal(FastMath.cos(angle));
         tempPlane.setOriginNormal(Vector3f.ZERO, store);
         store.set(tempPlane.getClosestPoint(VfxUtils.gen.nextUnitVector3f()
-                .multLocal(VfxUtils.gen.nextFloat(FastMath.sin(angle))).addLocal(store)));
+                .multLocal(VfxUtils.gen.nextFloat(FastMath.abs(FastMath.sin(angle)))).addLocal(store)));
         return store.normalizeLocal().multLocal(vec.length());
     }
     

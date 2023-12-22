@@ -5,14 +5,12 @@
 package codex.vfx.test;
 
 import codex.boost.scene.SceneGraphIterator;
-import codex.vfx.particles.InstancedParticleGeometry;
-import codex.vfx.particles.OverflowProtocol;
+import codex.vfx.particles.geometry.InstancedParticleGeometry;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
 import codex.vfx.particles.drivers.ParticleDriver;
-import codex.vfx.particles.tweens.LinearInterpolator;
 import codex.vfx.test.util.DemoApplication;
-import codex.vfx.utils.Range;
+import codex.vfx.particles.tweens.Range;
 import codex.vfx.utils.VfxUtils;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -22,6 +20,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.lemur.Axis;
 import com.simsilica.lemur.Button;
@@ -33,6 +32,8 @@ import com.simsilica.lemur.Slider;
 import com.simsilica.lemur.component.SpringGridLayout;
 import com.simsilica.lemur.core.VersionedReference;
 import jme3utilities.math.noise.Generator;
+import codex.vfx.particles.tweens.Interpolator;
+import codex.vfx.particles.OverflowStrategy;
 
 /**
  *
@@ -57,13 +58,14 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
         //setupVideoCapture("/Videos/instanced-monkeys.avi");
         
         group = new ParticleGroup(1000);
-        group.setOverflowProtocol(OverflowProtocol.CULL_OLD);
+        group.setOverflowStrategy(OverflowStrategy.CullOld);
         group.setDecayRate(1);
         group.addDriver(this);
         group.addDriver(ParticleDriver.ValueUpdate);
         group.addDriver(ParticleDriver.Position);
         group.addDriver(ParticleDriver.Rotation);
         //group.addDriver(ParticleDriver.force(new Vector3f(0f, -5f, 0f)));
+        rootNode.attachChild(group);
         
         Spatial model = assetManager.loadModel("Models/monkey.j3o");
         Mesh mesh = null;
@@ -89,7 +91,9 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
         InstancedParticleGeometry geometry = new InstancedParticleGeometry(group, mesh);
         geometry.setShadowMode(RenderQueue.ShadowMode.Off);
         geometry.setMaterial(material);
-        rootNode.attachChild(geometry);
+        Node n = new Node();
+        n.attachChild(geometry);
+        rootNode.attachChild(n);
         
         //enableLightProbes(false);
         //enableShadows(false);
@@ -112,7 +116,7 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
         buttons.setBackground(null);
         buttons.setLayout(new SpringGridLayout(Axis.X, Axis.Y));
         buttons.addChild(new Button("Reset")).addClickCommands((Button source) -> {
-            group.resetSimulation();
+            group.reset();
         });
         main.addChild(buttons);
         guiNode.attachChild(main);
@@ -120,7 +124,6 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
     }
     @Override
     public void demoUpdate(float tpf) {
-        group.update(tpf);
         if (speedRef.update()) {
             group.setUpdateSpeed(speedRef.get().floatValue());
         }
@@ -138,7 +141,7 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
             p.color = new Range(
                 ColorRGBA.Black,
                 ColorRGBA.randomColor(),
-                LinearInterpolator.Color,
+                Interpolator.Color,
                 Easing.inCubic
             );
             p.size.set(VfxUtils.gen.nextFloat(.8f, 1.2f));

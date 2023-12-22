@@ -4,27 +4,22 @@
  */
 package codex.vfx.test;
 
-import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.test.util.DemoApplication;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
 import codex.vfx.particles.ParticleSpawner;
-import codex.vfx.particles.TrailingGeometry;
-import com.jme3.anim.AnimComposer;
-import com.jme3.anim.SkinningControl;
+import codex.vfx.particles.geometry.TrailingGeometry;
 import com.jme3.asset.TextureKey;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.math.Vector3f;
-import com.jme3.post.FilterPostProcessor;
-import com.jme3.post.filters.BloomFilter;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
+import codex.vfx.particles.OverflowStrategy;
 
 /**
- *
+ * 
  * @author codex
  */
 public class TestTrailingEffects extends DemoApplication implements ParticleSpawner {
@@ -42,17 +37,9 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
     public void demoInitApp() {
         
         particles = new ParticleGroup<>(50);
-        particles.setOverflowProtocol(OverflowProtocol.CULL_OLD);
+        particles.setOverflowStrategy(OverflowStrategy.CullOld);
         
-        geometry = new TrailingGeometry(particles, new ParticleSpawner() {
-            @Override
-            public ParticleData createParticle(Vector3f position, ParticleGroup group) {
-                ParticleData p = new ParticleData(1f);
-                p.setPosition(position);
-                p.setScale(.1f);
-                return p;
-            }
-        });
+        geometry = new TrailingGeometry(particles);
         geometry.setFaceCamera(true);
         geometry.setLocalTranslation(0f, 2f, 0f);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);

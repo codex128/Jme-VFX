@@ -4,7 +4,6 @@
  */
 package codex.vfx.particles.tweens;
 
-import codex.vfx.utils.Value;
 import com.jme3.anim.tween.AbstractTween;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.math.EaseFunction;
@@ -22,14 +21,14 @@ import com.jme3.math.Easing;
 public class VfxTween <T> extends AbstractTween {
 
     private Value<T> output;
-    private final LinearInterpolator<T> interpolator;
+    private final Interpolator<T> interpolator;
     private EaseFunction ease;
     private T a, b;
     
-    public VfxTween(Value<T> output, LinearInterpolator<T> interpolator, T a, T b, double length) {
+    public VfxTween(Value<T> output, Interpolator<T> interpolator, T a, T b, double length) {
         this(output, interpolator, Easing.linear, a, b, length);
     }
-    public VfxTween(Value<T> output, LinearInterpolator<T> interpolator, EaseFunction ease, T a, T b, double length) {
+    public VfxTween(Value<T> output, Interpolator<T> interpolator, EaseFunction ease, T a, T b, double length) {
         super(length);
         this.output = output;
         this.interpolator = interpolator;
@@ -59,7 +58,7 @@ public class VfxTween <T> extends AbstractTween {
     public Value<T> getOutput() {
         return output;
     }
-    public LinearInterpolator<T> getInterpolator() {
+    public Interpolator<T> getInterpolator() {
         return interpolator;
     }
     public EaseFunction getEase() {

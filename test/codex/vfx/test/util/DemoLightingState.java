@@ -5,13 +5,10 @@
 package codex.vfx.test.util;
 
 import codex.boost.GameAppState;
+import codex.vfx.utils.VfxUtils;
 import com.jme3.app.Application;
-import com.jme3.environment.EnvironmentCamera;
-import com.jme3.environment.LightProbeFactory;
-import com.jme3.environment.generation.JobProgressAdapter;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
-import com.jme3.light.LightProbe;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
@@ -63,16 +60,17 @@ public class DemoLightingState extends GameAppState {
         }
         
         if (demoApp.enableLightProbes) {
-            EnvironmentCamera envCam = getState(EnvironmentCamera.class, true);
-            envCam.setPosition(new Vector3f(0f, 20f, 0f));
-            envCam.setBackGroundColor(new ColorRGBA(.3f, 0f, .6f, 1f));
-            LightProbeFactory.makeProbe(envCam, rootNode, new JobProgressAdapter<LightProbe>() {
-                @Override
-                public void done(LightProbe result) {
-                    result.getArea().setRadius(100f);
-                    rootNode.addLight(result);
-                }
-            });
+//            EnvironmentCamera envCam = getState(EnvironmentCamera.class, true);
+//            envCam.setPosition(new Vector3f(0f, 20f, 0f));
+//            envCam.setBackGroundColor(new ColorRGBA(.3f, 0f, .6f, 1f));
+//            LightProbeFactory.makeProbe(envCam, rootNode, new JobProgressAdapter<LightProbe>() {
+//                @Override
+//                public void done(LightProbe result) {
+//                    result.getArea().setRadius(100f);
+//                    rootNode.addLight(result);
+//                }
+//            });
+            rootNode.addLight(VfxUtils.loadLightProbe(assetManager, "Scenes/City_Night_Lights.j3o"));
         }
         
         Spatial sky = SkyFactory.createSky(assetManager, "Demo/FullskiesSunset0068.dds", SkyFactory.EnvMapType.CubeMap);

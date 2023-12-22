@@ -35,6 +35,7 @@ public class EmissionSphere implements EmissionVolume {
     public Vector3f getNextPosition(Transform transform) {
         return VfxUtils.getGenerator().nextUnitVector3f()
                 .multLocal(VfxUtils.getGenerator().nextFloat(radius))
+                .multLocal(transform.getScale())
                 .addLocal(transform.getTranslation());
     }
 

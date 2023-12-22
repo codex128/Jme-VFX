@@ -6,7 +6,7 @@ package codex.vfx.particles.drivers;
 
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
-import codex.vfx.utils.Value;
+import codex.vfx.particles.tweens.Value;
 import codex.vfx.utils.VfxUtils;
 import com.jme3.math.Plane;
 import com.jme3.math.Quaternion;
@@ -60,14 +60,15 @@ public interface ParticleDriver <T extends ParticleData> {
     /**
      * Updates all {@link Value} objects belong to each particle by calling
      * {@link ParticleData#updateValues(float)} on each particle.
+     * <p>
+     * This operation is now done automatically by the particle.
      */
+    @Deprecated
     public static final ParticleDriver ValueUpdate = new ParticleDriver() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
-        public void updateParticle(ParticleData particle, float tpf) {
-            particle.updateValues(tpf);
-        }
+        public void updateParticle(ParticleData particle, float tpf) {}
         @Override
         public void particleAdded(ParticleGroup group, ParticleData particle) {}
         @Override
@@ -130,7 +131,7 @@ public interface ParticleDriver <T extends ParticleData> {
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
         public void updateParticle(ParticleData particle, float tpf) {
-            particle.angle.set(particle.angle.get()+particle.rotationSpeed.get());
+            particle.angle.set(particle.angle.get()+particle.rotationSpeed.get()*tpf);
         }
         @Override
         public void particleAdded(ParticleGroup group, ParticleData particle) {}
@@ -169,6 +170,8 @@ public interface ParticleDriver <T extends ParticleData> {
      * <p>
      * If the direction vector is null, then the group's world rotation will be
      * used to determine the direction of the impulse.
+     * <p>
+     * Warning: work in progress.
      * 
      * @param direction direction of impulse, or null for group rotation
      * @param magnitude magnitude of impulse

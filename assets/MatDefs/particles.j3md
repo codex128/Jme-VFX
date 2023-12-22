@@ -1,9 +1,14 @@
 MaterialDef Simple {
     MaterialParameters {
         Texture2D ColorMap
+        Texture2D GlowMap
         Float AlphaDiscard
+        Float Quadratic : 1.0
         Vector2 SpriteGrid
+        Boolean Grayscale
         Boolean PointSprite
+        Boolean RotateTexture
+        Boolean Glow
     }
     Technique {
         VertexShader   GLSL330 GLSL120 GLSL100 : Shaders/particles.vert
@@ -17,8 +22,31 @@ MaterialDef Simple {
         }
         Defines {
             COLORMAP : ColorMap
+            GRAYSCALE : Grayscale
             USE_SPRITE_SHEET : SpriteGrid
             POINT_SPRITE : PointSprite
+            ROTATE_TEX : RotateTexture
+            ALPHA_DISCARD : AlphaDiscard
+        }
+    }
+    Technique Glow {
+        VertexShader   GLSL330 GLSL120 GLSL100 : Shaders/particles.vert
+        FragmentShader GLSL330 GLSL120 GLSL100 : Shaders/particles_glow.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldMatrix
+            ViewProjectionMatrix
+            CameraPosition
+            CameraUp
+        }
+        Defines {
+            GLOW : Glow
+            COLORMAP : ColorMap
+            GLOWMAP : GlowMap
+            GRAYSCALE : Grayscale
+            USE_SPRITE_SHEET : SpriteGrid
+            POINT_SPRITE : PointSprite
+            ROTATE_TEX : RotateTexture
             ALPHA_DISCARD : AlphaDiscard
         }
     }

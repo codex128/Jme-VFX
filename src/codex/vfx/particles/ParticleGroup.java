@@ -4,10 +4,13 @@
  */
 package codex.vfx.particles;
 
+import codex.vfx.VfxAttribute;
 import codex.vfx.particles.drivers.emission.EmissionVolume;
 import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.particles.drivers.emission.EmissionPoint;
+import codex.vfx.particles.geometry.ParticleGeometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -21,55 +24,107 @@ import java.util.LinkedList;
  */
 public class ParticleGroup <T extends ParticleData> extends Node implements Iterable<T> {
     
+    private ParticleGroup parentGroup;
+    private final LinkedList<ParticleGroup> childGroups = new LinkedList<>();
     private final ArrayList<T> particles = new ArrayList<>();
     private final LinkedList<ParticleDriver<T>> drivers = new LinkedList<>();
-    private OverflowProtocol overflow = OverflowProtocol.CULL_NEW;
-    private EmissionVolume volume = new EmissionPoint();
-    private final int capacity;
+    private OverflowStrategy<T> overflow = OverflowStrategy.CullNew;
+    private EmissionVolume<T> volume = new EmissionPoint();
+    private int capacity;
     private float updateSpeed = 1f, decay = 1f;
     private float time = 0f, delay = 0f;
+    private boolean playing = true, worldPlayState = true;
+    private boolean inheritDecayRate = false;
     
+    /**
+     * Creates a particle group of zero capacity.
+     */
+    public ParticleGroup() {
+        this(0);
+    }
+    /**
+     * Creates a particle group of the given capacity.
+     * 
+     * @param capacity 
+     */
     public ParticleGroup(int capacity) {
-        if (capacity < 1) {
-            throw new IllegalArgumentException("Must have at least 1 capacity.");
-        }
+        assert capacity >= 0 : "Group capacity must be greater than or equal to zero.";
         this.capacity = capacity;
     }
     
-    /**
-     * Manually updates this group.
-     * <p>
-     * Do not call if this if this group is attached to the
-     * scene graph, because this will be called automatically.
-     * 
-     * @param tpf time per frame
-     */
-    public void update(float tpf) {
-        float t = tpf*updateSpeed;
-        time += t;
-        // Time will not move for drivers when the time value
-        // is in the delay zone.
-        t *= (time >= delay ? 1 : 0);
-        for (ParticleDriver<T> d : drivers) {
-            d.updateGroup(this, t);
+    @Override
+    public void updateLogicalState(float tpf) {
+        super.updateLogicalState(tpf);
+        if (parentGroup == null) {
+            update(playing, tpf, 1);
         }
-        for (Iterator<T> it = particles.iterator(); it.hasNext();) {
+    }
+    @Override
+    public int attachChildAt(Spatial spatial, int index) {
+        if (spatial instanceof ParticleGroup) {
+            ParticleGroup g = (ParticleGroup)spatial;
+            g.parentGroup = this;
+            childGroups.addLast(g);
+        }
+        return super.attachChildAt(spatial, index);
+    }
+    @Override
+    public Spatial detachChildAt(int index) {
+        Spatial spatial = super.detachChildAt(index);
+        if (spatial != null && spatial instanceof ParticleGroup) {
+            ParticleGroup g = (ParticleGroup)spatial;
+            if (g.parentGroup == this) {
+                g.parentGroup = null;
+                childGroups.remove(g);
+            }
+        }
+        return spatial;
+    }
+    
+    /**
+     * Updates this group and child groups.
+     * 
+     * @param update true if a regular update should be performed
+     * @param tpf propogated manipulated time per frame
+     * @param decay propogated decay rate
+     */
+    protected void update(boolean update, float tpf, float decay) {
+        validateGroupSize(true);
+        worldPlayState = update && playing;
+        float t = tpf*updateSpeed;
+        if (worldPlayState) {
+            time += t;
+        }
+        t *= (inDelayZone() ? 0 : 1);
+        decay *= this.decay;
+        if (worldPlayState) {
+            updateParticles(t, (inheritDecayRate ? decay : this.decay));
+        }
+        // update child groups
+        for (ParticleGroup g : childGroups) {
+            g.update(worldPlayState, t, decay);
+        }
+    }
+    protected void updateParticles(float tpf, float decay) {
+        for (ParticleDriver<T> d : drivers) {
+            d.updateGroup(this, tpf);
+        }
+        if (!particles.isEmpty()) for (Iterator<T> it = particles.iterator(); it.hasNext();) {
             T p = it.next();
             for (ParticleDriver<T> d : drivers) {
-                d.updateParticle(p, t);
+                d.updateParticle(p, tpf);
             }
-            if (!p.update(t*decay)) {
+            if (!p.update(tpf*decay)) {
                 it.remove();
             }
         }
     }
-    @Override
-    public void updateLogicalState(float tpf) {
-        update(tpf);
-    }
     
-    private boolean addParticle(T particle) {
-        if (particles.add(particle)) {
+    protected boolean addParticle(T particle) {
+        if (capacity > 0 && worldPlayState && particles.add(particle)) {
+            if (particles.size() > capacity && overflow.removeParticle(this, particle)) {
+                return false;
+            }
             for (ParticleDriver<T> d : drivers) {
                 d.particleAdded(this, particle);
             }
@@ -77,51 +132,39 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
         }
         return false;
     }
-    private void addParticle(T particle, int index) {
-        particles.add(index, particle);
-        for (ParticleDriver<T> d : drivers) {
-            d.particleAdded(this, particle);
+    protected boolean validateGroupSize(boolean exception) {
+        if (particles.size() > capacity) {
+            if (exception) {
+                throw new IllegalStateException("Number of particles cannot exceed the group capacity.");
+            }
+            return false;
         }
+        return true;
     }
     
     /**
      * Adds a particle to this group.
+     * <p>
+     * The group must be playing (true by default).
      * 
      * @param particle
      * @return true if the particle was successfully added to the group
      */
     public boolean add(T particle) {
-        if (particles.size() < capacity) {
-            return addParticle(particle);
-        }
-        return (overflow.removeParticle(this, particle) && addParticle(particle)) & validateGroupSize(true);
-    }
-    /**
-     * Adds the particle to this group at the specified index.
-     * 
-     * @param particle particle to add
-     * @param index index to add the particle at. Must not be out of bounds.
-     * @return true if the particle was successfully added to the group
-     */
-    public boolean add(T particle, int index) {
-        if (particles.size() < capacity) {
-            addParticle(particle, index);
-            return true;
-        }
-        if (overflow.removeParticle(this, particle)) {
-            addParticle(particle, index);
-            validateGroupSize(true);
-            return true;
-        }
-        return false;
+        return addParticle(particle);
     }
     /**
      * Adds all the particles in the collection to this group.
+     * <p>
+     * The group must be playing (true by default).
      * 
      * @param particles
      * @return number of particles successfully added to the group
      */
     public int addAll(Collection<T> particles) {
+        if (!worldPlayState || capacity == 0) {
+            return 0;
+        }
         if (this.particles.size()+particles.size() <= capacity) {
             this.particles.addAll(particles);
             for (T p : particles) for (ParticleDriver<T> d : drivers) {
@@ -136,23 +179,41 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
             }
             if (addParticle(p)) c++;
         }
-        validateGroupSize(true);
         return c;
     }
     /**
      * Removes the particle from the group.
+     * <p>
+     * The group must be playing (true by default).
      * 
      * @param particle
      * @return true if the particle existed in the group
      */
     public boolean remove(T particle) {
-        return particles.remove(particle);
+        return worldPlayState && particles.remove(particle);
+    }
+    /**
+     * Removes the particle at the index from the group.
+     * 
+     * @param i index to remove from
+     * @return removed particle
+     */
+    public T remove(int i) {
+        if (worldPlayState) {
+            return particles.remove(i);
+        } else {
+            return null;
+        }
     }
     /**
      * Clears all particles from this group.
+     * <p>
+     * The group must be playing (true by default).
      */
     public void clearAllParticles() {
-        particles.clear();
+        if (worldPlayState) {
+            particles.clear();
+        }
     }
     
     /**
@@ -195,14 +256,32 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     }
     
     /**
-     * Sets the protocol for when an added particle would make
+     * Set the maximum number of particles this group can handle.
+     * <p>
+     * Changing the capacity outside initialization can be expensive, since
+     * particle geometries have to recalculate their buffers to cope with
+     * the promise of more particles.
+     * 
+     * @param capacity 
+     */
+    @VfxAttribute(value="capacity")
+    public void setCapacity(int capacity) {        
+        assert capacity >= 0 : "Group capacity must be greater than or equal to zero.";
+        this.capacity = capacity;
+        while (this.capacity < particles.size()) {
+            overflow.removeParticle(this, null);
+        }
+    }
+    /**
+     * Sets the strategy for when an added particle would make
      * the group's size exceed its capacity.
      * <p>
-     * default={@link OverflowProtocol#CULL_NEW}
+     * default={@link OverflowStrategy#CullNew}
      * 
      * @param overflow 
      */
-    public void setOverflowProtocol(OverflowProtocol overflow) {
+    @VfxAttribute(value="overflowStrategy")
+    public void setOverflowStrategy(OverflowStrategy<T> overflow) {
         this.overflow = overflow;
     }
     /**
@@ -212,7 +291,8 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param volume emission volume (not null)
      */
-    public void setVolume(EmissionVolume volume) {
+    @VfxAttribute(value="volume")
+    public void setVolume(EmissionVolume<T> volume) {
         assert volume != null : "Emission volume cannot be null";
         this.volume = volume;
     }
@@ -224,6 +304,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param speed 
      */
+    @VfxAttribute(value="updateSpeed")
     public void setUpdateSpeed(float speed) {
         this.updateSpeed = speed;
     }
@@ -238,6 +319,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param decay 
      */
+    @VfxAttribute(value="decayRate")
     public void setDecayRate(float decay) {
         this.decay = decay;
     }
@@ -248,41 +330,158 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param delay 
      */
+    @VfxAttribute(value="initialDelay")
     public void setInitialDelay(float delay) {
         this.delay = delay;
     }
+    /**
+     * If true, world decay rate will be used to decay particles instead of local decay rate.
+     * <p>
+     * default=false
+     * 
+     * @param inheritDecayRate 
+     */
+    @VfxAttribute(value="inheritDecayRate")
+    public void setInheritDecayRate(boolean inheritDecayRate) {
+        this.inheritDecayRate = inheritDecayRate;
+    }
     
     /**
-     * Resets the simulation by removing all particles and reseting the simulation time.
+     * Sets this group's play state to true.
      * <p>
-     * Drivers are also notified.
+     * default=play
      */
-    public void resetSimulation() {
-        particles.clear();
-        time = 0;
-        for (ParticleDriver<T> d : drivers) {
-            d.groupReset(this);
+    public void play() {
+        playing = true;
+    }
+    /**
+     * Sets this group's play state to false.
+     * <p>
+     * Drivers will not be updated in this state. New particles will be denied.
+     * Existing particles cannot be removed.
+     * <p>
+     * Since this group's particles cannot, and should not, change while
+     * this group is paused, any particle geometries using this group do not need to update
+     * their meshes in this state.
+     * <p>
+     * This is an extreme method for making the simulation stop, since it stops everything.
+     * A more conservative approach is to set the update speed to zero. Then this group,
+     * child groups, and subsequent drivers will still get updated, but they will not progress.
+     * <p>
+     * Call {@link #play()} to undo this.<br>
+     * default=play
+     * 
+     * @see ParticleGeometry#setForceMeshUpdate(boolean)
+     */
+    public void pause() {
+        playing = false;
+    }
+    /**
+     * Reverses the play state.
+     * <p>
+     * If playing (true), the play state is set to false.<br>
+     * If paused (false), the play state is set to true.
+     * 
+     * @return the new play state
+     */
+    public boolean flipPlayState() {
+        return (playing = !playing);
+    }
+    /**
+     * Resets the group by removing all particles and reseting the simulation time.
+     * <p>
+     * Drivers are also notified, so they can reset themselves accordingly.
+     * <br>Will not reset if paused.
+     */
+    public void reset() {
+        if (worldPlayState) {
+            particles.clear();
+            time = 0;
+            for (ParticleDriver<T> d : drivers) {
+                d.groupReset(this);
+            }
         }
     }
     
+    /**
+     * Gets the particle at the specified index.
+     * 
+     * @param i index between 0 (inclusive) and group size (exclusive)
+     * @return particle at index
+     */
     public ParticleData get(int i) {
         return particles.get(i);
     }
+    /**
+     * Gets the list of particles this group controls.
+     * <p>
+     * <em>Do not modify the returned list!</em>
+     * 
+     * @return 
+     */
     public ArrayList<T> getParticleList() {
         return particles;
     }
-    public OverflowProtocol getOverflowHint() {
+    public OverflowStrategy<T> getOverflowStrategy() {
         return overflow;
     }
-    public EmissionVolume getVolume() {
+    public EmissionVolume<T> getVolume() {
         return volume;
     }
+    /**
+     * Gets the list of child particle group's this group is a parent of.
+     * <p>
+     * <em>Do not modify the returned list!</em>
+     * 
+     * @return 
+     */
+    public LinkedList<ParticleGroup> getChildGroupList() {
+        return childGroups;
+    }
+    /**
+     * Returns true if this group has no particles.
+     * 
+     * @return 
+     */
     public boolean isEmpty() {
         return particles.isEmpty();
     }
+    /**
+     * Returns true if the number of particles in this group is
+     * greater than or equal to the capacity.
+     * 
+     * @return 
+     */
+    public boolean isFull() {
+        return particles.size() >= capacity;
+    }
+    /**
+     * Returns this group's local play state.
+     * <p>
+     * true=playing<br>
+     * false=paused
+     * 
+     * @return local play state
+     */
+    public boolean getLocalPlayState() {
+        return playing;
+    }
+    public boolean inDelayZone() {
+        return time < delay;
+    }
+    /**
+     * Returns the number of particles currently part of this group.
+     * 
+     * @return 
+     */
     public int size() {
         return particles.size();
     }
+    /**
+     * Returns the maximum number of particles that can be part of this group.
+     * 
+     * @return 
+     */
     public int capacity() {
         return capacity;
     }
@@ -295,6 +494,54 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     public float getInitialDelay() {
         return delay;
     }
+    /**
+     * Fetches the world update speed of this group.
+     * 
+     * @return 
+     */
+    public float getWorldUpdateSpeed() {
+        if (parentGroup != null) {
+            return parentGroup.getWorldUpdateSpeed() * updateSpeed;
+        } else {
+            return updateSpeed;
+        }
+    }
+    /**
+     * Fetches the world decay rate of this group.
+     * 
+     * @return 
+     */
+    public float getWorldDecayRate() {
+        if (parentGroup != null) {
+            return parentGroup.getWorldDecayRate() * decay;
+        } else {
+            return decay;
+        }
+    }
+    /**
+     * Fetches the total number of seconds which this group must
+     * wait from particle system start to begin its simulation.
+     * 
+     * @return 
+     */
+    public float getWorldInitialDelay() {
+        if (parentGroup != null) {
+            return parentGroup.getWorldInitialDelay() + delay;
+        } else {
+            return delay;
+        }
+    }
+    /**
+     * Gets the world play state of this group.
+     * <p>
+     * If this or any parent group is <em>not</em> playing, the world
+     * play state is false.
+     * 
+     * @return 
+     */
+    public boolean getWorldPlayState() {
+        return worldPlayState;
+    }
     
     public float getTime() {
         return Math.max(time-delay, 0f);
@@ -306,16 +553,6 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     @Override
     public Iterator<T> iterator() {
         return particles.iterator();
-    }
-    
-    private boolean validateGroupSize(boolean exception) {
-        if (particles.size() > capacity) {
-            if (exception) {
-                throw new IllegalStateException("Number of particles cannot exceed the group capacity.");
-            }
-            return true;
-        }
-        return false;
     }
     
 }

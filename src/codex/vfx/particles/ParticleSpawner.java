@@ -7,9 +7,11 @@ package codex.vfx.particles;
 import com.jme3.math.Vector3f;
 
 /**
- *
+ * Use {@link EmissionVolume} instead.
+ * 
  * @author codex
  */
+@Deprecated
 public interface ParticleSpawner {
     
     public ParticleData createParticle(Vector3f position, ParticleGroup group);

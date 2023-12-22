@@ -8,10 +8,9 @@ import codex.boost.ColorHSBA;
 import codex.boost.Timer;
 import codex.boost.TimerListener;
 import codex.vfx.mesh.MeshPrototype;
-import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
-import codex.vfx.particles.TriParticleGeometry;
+import codex.vfx.particles.geometry.TriParticleGeometry;
 import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.test.util.DemoApplication;
 import com.jme3.material.Material;
@@ -20,6 +19,7 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
+import codex.vfx.particles.OverflowStrategy;
 
 /**
  *
@@ -41,9 +41,10 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
     public void demoInitApp() {
     
         group = new ParticleGroup(200);
-        group.setOverflowProtocol(OverflowProtocol.CULL_NEW);
+        group.setOverflowStrategy(OverflowStrategy.CullNew);
         group.addDriver(ParticleDriver.force(new Vector3f(0f, -3f, 0f)));
         group.addDriver(ParticleDriver.Position);
+        rootNode.attachChild(group);
         
         geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
         geometry.setLocalTranslation(0, 3, 0);
@@ -63,7 +64,6 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
     @Override
     public void demoUpdate(float tpf) {
         timer.update(tpf);
-        group.update(tpf);
     }
     @Override
     public void onTimerFinish(Timer timer) {

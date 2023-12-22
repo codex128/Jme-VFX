@@ -44,7 +44,9 @@ public class EmissionBox implements EmissionVolume {
     
     @Override
     public Vector3f getNextPosition(Transform transform) {
-        return VfxUtils.random(center, extent.x, extent.y, extent.z).addLocal(transform.getTranslation());
+        return VfxUtils.random(center, extent.x, extent.y, extent.z)
+                .multLocal(transform.getScale())
+                .addLocal(transform.getTranslation());
     }
 
     public void setCenter(Vector3f center) {

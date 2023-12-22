@@ -5,96 +5,37 @@
 package codex.vfx.particles.drivers.emission;
 
 import codex.vfx.particles.ParticleData;
-import codex.vfx.particles.ParticleGroup;
-import codex.vfx.particles.drivers.ParticleDriver;
-import codex.vfx.utils.Value;
-import com.jme3.math.ColorRGBA;
 
 /**
- * Spawns particles at certain time intervals.
+ * Spawns particles at certain intervals.
  * <p>
- * Does not fill in particle data.
+ * This is responsible for the <em>timing</em> and <em>number</em>
+ * of the spawns. Whatever is handling the Spawner must do the actual spawning.
  * 
  * @author codex
- * @param <T>
+ * @param <T> type of particle to spawn
  */
-public abstract class Spawner <T extends ParticleData> implements ParticleDriver<T> {
-    
-    private Value<Integer> maxEmissions = Value.value(-1);
-    private Value<Integer> particlesPerEmission = Value.value(1);
-    private Value<Float> emissionRate = Value.value(.1f);
-    
-    private int emissions = 0;
-    private float time = 0;
-    
-    @Override
-    public void updateGroup(ParticleGroup group, float tpf) {
-        time += tpf;
-        int m = maxEmissions.get();
-        if ((m < 0 || emissions < m) && time >= emissionRate.get()) {
-            for (int i = 0, n = particlesPerEmission.get(); i < n; i++) {
-                group.add(createParticle());
-            }
-            time = 0;
-            emissions++;
-        }
-    }
-    @Override
-    public void updateParticle(ParticleData particle, float tpf) {}
-    @Override
-    public void particleAdded(ParticleGroup group, ParticleData particle) {}    
-    @Override
-    public void groupReset(ParticleGroup group) {
-        emissions = 0;
-        time = 0;
-    }
+public interface Spawner <T extends ParticleData> {
     
     /**
-     * Creates a new particle instance.
+     * Updates the spawner.
      * 
-     * @return 
+     * @param time time in seconds
+     * @param tpf time per frame
+     * @return number of particles to spawn (0 to spawn no particles)
      */
-    protected abstract T createParticle();
-    
-    public void setMaxEmissions(Value<Integer> maxEmissions) {
-        this.maxEmissions = maxEmissions;
-    }
-    public void setParticlesPerEmission(Value<Integer> particlesPerEmission) {
-        this.particlesPerEmission = particlesPerEmission;
-    }
-    public void setEmissionRate(Value<Float> emissionRate) {
-        this.emissionRate = emissionRate;
-    }
-    
-    public Value<Integer> getMaxEmissions() {
-        return maxEmissions;
-    }
-    public Value<Integer> getParticlesPerEmission() {
-        return particlesPerEmission;
-    }
-    public Value<Float> getEmissionRate() {
-        return emissionRate;
-    }
-    public int getNumEmissions() {
-        return emissions;
-    }
+    public int updateSpawn(float time, float tpf);
     
     /**
-     * Creates a spawner instance using a non-abstract implementation.
+     * Creates and returns a single particle.
      * 
-     * @return 
+     * @return spawned particle
      */
-    public static SpawnerImpl create() {
-        return new SpawnerImpl();
-    }
+    public T spawn();
     
-    public static class SpawnerImpl extends Spawner<ParticleData> {
-
-        @Override
-        protected ParticleData createParticle() {
-            return new ParticleData();
-        }
-        
-    }
+    /**
+     * Resets the spawner.
+     */
+    public void reset();
     
 }

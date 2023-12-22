@@ -16,6 +16,15 @@ varying vec4 vertexColor;
 #ifndef POINT_SPRITE
     attribute vec2 inTexCoord2;
     varying vec3 wNormal;
+#else
+    attribute float inSize;
+    uniform float m_Quadratic;
+    const float SIZE_MULTIPLIER = 4.0;
+    varying float distanceAlpha;
+    #ifdef ROTATE_TEX
+        attribute float inTexCoord4; // rotation angle
+        varying float angle;
+    #endif
 #endif
 
 #ifdef COLORMAP
@@ -24,7 +33,7 @@ varying vec4 vertexColor;
     #endif
     varying vec4 texCoord;
     #ifdef USE_SPRITE_SHEET
-        attribute int inTexCoord3;
+        attribute float inTexCoord3;
         uniform vec2 m_SpriteGrid;
     #endif
 #endif
@@ -32,7 +41,6 @@ varying vec4 vertexColor;
 void main(){
     
     vec4 modelSpacePos = vec4(inPosition, 1.0);
-    texCoord = inTexCoord;
     vertexColor = inColor;    
     wPosition = (g_WorldMatrix * modelSpacePos).xyz;
     
@@ -40,6 +48,14 @@ void main(){
         wNormal = normalize(g_CameraPosition - wPosition);
         vec3 across = cross(wNormal, g_CameraUp);
         wPosition -= across * inTexCoord2.x - g_CameraUp * inTexCoord2.y;
+    #else
+        float d = distance(g_CameraPosition, wPosition);
+        float size = (inSize * SIZE_MULTIPLIER * m_Quadratic) / d;
+        gl_PointSize = max(1.0, size);
+        distanceAlpha = min(1.0, size);
+        #ifdef ROTATE_TEX
+            angle = inTexCoord4;
+        #endif
     #endif
     
     gl_Position = g_ViewProjectionMatrix * vec4(wPosition, 1.0);
@@ -55,10 +71,11 @@ void main(){
                 texCoord.xy /= m_SpriteGrid;
             #endif
             float index = float(inTexCoord3);
-            texCoord.x += mod(index, m_SpriteGrid.x) / m_SpriteGrid.x;
-            texCoord.y += floor(index / m_SpriteGrid.x) / m_SpriteGrid.y;
+            texCoord.x = mod(index, m_SpriteGrid.x) / m_SpriteGrid.x;
+            texCoord.y = 1.0 - (floor(index / m_SpriteGrid.x) / m_SpriteGrid.y);
             #ifdef POINT_SPRITE
-                texCoord.zw = texCoord.xy + (vec2(1.0) / m_SpriteGrid);
+                texCoord.z = texCoord.x + (1.0 / m_SpriteGrid.x);
+                texCoord.w = texCoord.y - (1.0 / m_SpriteGrid.y);
             #endif
         #endif
     #endif

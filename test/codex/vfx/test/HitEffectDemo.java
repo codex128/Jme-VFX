@@ -5,10 +5,9 @@
 package codex.vfx.test;
 
 import codex.vfx.mesh.MeshPrototype;
-import codex.vfx.particles.OverflowProtocol;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
-import codex.vfx.particles.TriParticleGeometry;
+import codex.vfx.particles.geometry.TriParticleGeometry;
 import codex.vfx.test.util.DemoApplication;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
@@ -17,6 +16,7 @@ import com.jme3.material.RenderState;
 import com.jme3.math.FastMath;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
+import codex.vfx.particles.OverflowStrategy;
 
 /**
  * Demo of spawning hit effects for punches and kicks.
@@ -36,7 +36,8 @@ public class HitEffectDemo extends DemoApplication {
     public void demoInitApp() {
         
         group = new ParticleGroup(2);
-        group.setOverflowProtocol(OverflowProtocol.CULL_OLD);
+        group.setOverflowStrategy(OverflowStrategy.CullOld);
+        rootNode.attachChild(group);
         
         geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
         geometry.setLocalTranslation(0, 3, 0);
@@ -64,7 +65,6 @@ public class HitEffectDemo extends DemoApplication {
     }
     @Override
     public void demoUpdate(float tpf) {
-        group.update(tpf);
         for (ParticleData p : group) {
             p.color.get().a = FastMath.clamp(p.getLifePercent(), 0f, 0f);
         }
