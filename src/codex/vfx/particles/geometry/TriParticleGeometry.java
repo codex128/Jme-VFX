@@ -104,7 +104,7 @@ public class TriParticleGeometry extends ParticleGeometry<ParticleData> {
         for (ParticleData p : group) {
             q.fromAngles(0f, 0f, p.angle.get());
             for (Vector3f v : prototype.getVerts()) {
-                q.mult(v, vec).multLocal(p.size.get());
+                q.mult(v, vec).multLocal(p.size.get()).multLocal(p.getScale());
                 MeshUtils.writeVector3(positions, p.getPosition());
                 localPos.put(vec.x).put(vec.y);
                 MeshUtils.writeColor(colors, p.color.get());

@@ -10,10 +10,19 @@ import com.jme3.math.Matrix3f;
 import com.jme3.post.FilterPostProcessor;
 
 /**
- *
+ * Test for kernel post filters.
+ * 
  * @author codex
  */
 public class TestFilterKernels extends DemoApplication {
+    
+    // Matrix defining how the kernel samples surrounding pixels.
+    // Feel free to play around with this.
+    private final Matrix3f kernel = new Matrix3f(
+        2,   2,  2,
+        2, -15,  2,
+        2,   2,  2
+    );
     
     public static void main(String[] args) {
         new TestFilterKernels().start();
@@ -24,12 +33,12 @@ public class TestFilterKernels extends DemoApplication {
         
         setupCharacter();
         
-        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+        FilterPostProcessor f = new FilterPostProcessor(assetManager);
         KernelFilter filter = new KernelFilter();
-        filter.setKernelMatrix(new Matrix3f(2, 2, 2, 2, -15, 2, 2, 2, 2));
+        filter.setKernelMatrix(kernel);
         filter.setSampleFactor(1f);
-        fpp.addFilter(filter);
-        viewPort.addProcessor(fpp);
+        f.addFilter(filter);
+        viewPort.addProcessor(f);
         
     }
     @Override

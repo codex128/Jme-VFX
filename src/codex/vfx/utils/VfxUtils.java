@@ -13,7 +13,7 @@ import com.jme3.scene.Node;
 import jme3utilities.math.noise.Generator;
 
 /**
- * Math utils for vfx applications.
+ * Utils for vfx and general applications.
  * 
  * @author codex
  */
@@ -80,6 +80,8 @@ public class VfxUtils {
     
     /**
      * Offsets the vector by an angle and stores the result.
+     * <p>
+     * Work in progress.
      * 
      * @param vec
      * @param angle
@@ -95,6 +97,16 @@ public class VfxUtils {
         store.set(tempPlane.getClosestPoint(VfxUtils.gen.nextUnitVector3f()
                 .multLocal(VfxUtils.gen.nextFloat(FastMath.abs(FastMath.sin(angle)))).addLocal(store)));
         return store.normalizeLocal().multLocal(vec.length());
+    }
+    
+    /**
+     * Returns the average of all vector components.
+     * 
+     * @param vec
+     * @return 
+     */
+    public static float vectorAverage(Vector3f vec) {
+        return (vec.x + vec.y + vec.z) / 3;
     }
     
 }

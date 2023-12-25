@@ -4,7 +4,8 @@
  */
 package codex.vfx.particles;
 
-import codex.vfx.VfxAttribute;
+import codex.vfx.VirtualEffect;
+import codex.vfx.annotations.*;
 import codex.vfx.particles.drivers.emission.EmissionVolume;
 import codex.vfx.particles.drivers.ParticleDriver;
 import codex.vfx.particles.drivers.emission.EmissionPoint;
@@ -20,9 +21,9 @@ import java.util.LinkedList;
  * Contains a group of particles.
  * 
  * @author codex
- * @param <T> type of particle data this group uses
+ * @param <T> channel of particle data this group uses
  */
-public class ParticleGroup <T extends ParticleData> extends Node implements Iterable<T> {
+public class ParticleGroup <T extends ParticleData> extends Node implements VirtualEffect, Iterable<T> {
     
     private ParticleGroup parentGroup;
     private final LinkedList<ParticleGroup> childGroups = new LinkedList<>();
@@ -36,18 +37,17 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     private boolean playing = true, worldPlayState = true;
     private boolean inheritDecayRate = false;
     
-    /**
-     * Creates a particle group of zero capacity.
-     */
     public ParticleGroup() {
-        this(0);
+        this(ParticleGroup.class.getSimpleName(), 0);
     }
-    /**
-     * Creates a particle group of the given capacity.
-     * 
-     * @param capacity 
-     */
+    public ParticleGroup(String name) {
+        this(name, 0);
+    }
     public ParticleGroup(int capacity) {
+        this(ParticleGroup.class.getSimpleName(), capacity);
+    }
+    public ParticleGroup(String name, int capacity) {
+        super(name);
         assert capacity >= 0 : "Group capacity must be greater than or equal to zero.";
         this.capacity = capacity;
     }
@@ -261,10 +261,16 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * Changing the capacity outside initialization can be expensive, since
      * particle geometries have to recalculate their buffers to cope with
      * the promise of more particles.
+     * <p>
+     * It is suggested to set the capacity using a constructor.
+     * <p>
+     * default=0 (no particle support)
      * 
      * @param capacity 
+     * @see #ParticleGroup(int)
+     * @see #ParticleGroup(java.lang.String, int)
      */
-    @VfxAttribute(value="capacity")
+    @VfxAttribute(name="capacity")
     public void setCapacity(int capacity) {        
         assert capacity >= 0 : "Group capacity must be greater than or equal to zero.";
         this.capacity = capacity;
@@ -280,7 +286,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param overflow 
      */
-    @VfxAttribute(value="overflowStrategy")
+    @VfxAttribute(name="overflowStrategy")
     public void setOverflowStrategy(OverflowStrategy<T> overflow) {
         this.overflow = overflow;
     }
@@ -291,7 +297,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param volume emission volume (not null)
      */
-    @VfxAttribute(value="volume")
+    @VfxAttribute(name="volume")
     public void setVolume(EmissionVolume<T> volume) {
         assert volume != null : "Emission volume cannot be null";
         this.volume = volume;
@@ -299,12 +305,12 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     /**
      * Sets the rate at which particles update.
      * <p>
-     * This value is propogated to drivers through {@code tpf}.<br>
+ This name is propogated to drivers through {@code tpf}.<br>
      * default=1.0
      * 
      * @param speed 
      */
-    @VfxAttribute(value="updateSpeed")
+    @Override
     public void setUpdateSpeed(float speed) {
         this.updateSpeed = speed;
     }
@@ -319,7 +325,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param decay 
      */
-    @VfxAttribute(value="decayRate")
+    @VfxAttribute(name="decayRate")
     public void setDecayRate(float decay) {
         this.decay = decay;
     }
@@ -330,7 +336,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param delay 
      */
-    @VfxAttribute(value="initialDelay")
+    @Override
     public void setInitialDelay(float delay) {
         this.delay = delay;
     }
@@ -341,7 +347,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @param inheritDecayRate 
      */
-    @VfxAttribute(value="inheritDecayRate")
+    @VfxAttribute(name="inheritDecayRate")
     public void setInheritDecayRate(boolean inheritDecayRate) {
         this.inheritDecayRate = inheritDecayRate;
     }
@@ -351,6 +357,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * <p>
      * default=play
      */
+    @Override
     public void play() {
         playing = true;
     }
@@ -373,6 +380,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @see ParticleGeometry#setForceMeshUpdate(boolean)
      */
+    @Override
     public void pause() {
         playing = false;
     }
@@ -393,6 +401,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * Drivers are also notified, so they can reset themselves accordingly.
      * <br>Will not reset if paused.
      */
+    @VfxCommand(name="reset")
     public void reset() {
         if (worldPlayState) {
             particles.clear();
@@ -422,9 +431,11 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
     public ArrayList<T> getParticleList() {
         return particles;
     }
+    @VfxAttribute(name="overflowStrategy", input=false)
     public OverflowStrategy<T> getOverflowStrategy() {
         return overflow;
     }
+    @VfxAttribute(name="volume", input=false)
     public EmissionVolume<T> getVolume() {
         return volume;
     }
@@ -437,6 +448,15 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      */
     public LinkedList<ParticleGroup> getChildGroupList() {
         return childGroups;
+    }
+    /**
+     * Get the parent particle group of this group.
+     * 
+     * @return 
+     */
+    @VfxInfo(name="parent")
+    public ParticleGroup getParentGroup() {
+        return parentGroup;
     }
     /**
      * Returns true if this group has no particles.
@@ -463,6 +483,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @return local play state
      */
+    @Override
     public boolean getLocalPlayState() {
         return playing;
     }
@@ -474,6 +495,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @return 
      */
+    @VfxInfo(name="size")
     public int size() {
         return particles.size();
     }
@@ -482,23 +504,32 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @return 
      */
+    @VfxAttribute(name="capacity", input=false)
     public int capacity() {
         return capacity;
     }
+    @Override
     public float getUpdateSpeed() {
         return updateSpeed;
     }
+    @VfxAttribute(name="decayRate", input=false)
     public float getDecayRate() {
         return decay;
     }
+    @Override
     public float getInitialDelay() {
         return delay;
+    }
+    @VfxAttribute(name="inheritDecayRate", input=false)
+    public boolean isInheritDecayRate() {
+        return inheritDecayRate;
     }
     /**
      * Fetches the world update speed of this group.
      * 
      * @return 
      */
+    @Override
     public float getWorldUpdateSpeed() {
         if (parentGroup != null) {
             return parentGroup.getWorldUpdateSpeed() * updateSpeed;
@@ -511,6 +542,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @return 
      */
+    @VfxInfo(name="worldDecayRate", important=false)
     public float getWorldDecayRate() {
         if (parentGroup != null) {
             return parentGroup.getWorldDecayRate() * decay;
@@ -524,6 +556,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @return 
      */
+    @Override
     public float getWorldInitialDelay() {
         if (parentGroup != null) {
             return parentGroup.getWorldInitialDelay() + delay;
@@ -539,13 +572,26 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Iter
      * 
      * @return 
      */
+    @Override
     public boolean getWorldPlayState() {
         return worldPlayState;
     }
     
+    /**
+     * Gets the time since beginning the simulation (after world delay).
+     * 
+     * @return 
+     */
+    @Override
     public float getTime() {
         return Math.max(time-delay, 0f);
     }
+    /**
+     * Get the time since beginning update (before world delay).
+     * 
+     * @return 
+     */
+    @Override
     public float getRawTime() {
         return time;
     }

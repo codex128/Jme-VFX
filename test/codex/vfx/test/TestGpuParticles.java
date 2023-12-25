@@ -32,12 +32,12 @@ import java.nio.FloatBuffer;
  */
 public class TestGpuParticles extends DemoApplication {
     
-    // Number of particles = this number squared.
-    private final int particleMapSize = 1000;
+    // Number of particles = this number squared
+    private final int particleMapSize = 1024;
     
     // Use images to store particle data as opposed to vertex buffers.
-    // WARNING: If using buffers, exceeding 70,000 particles may cause
-    //          the application to freeze.
+    // WARNING: If using buffers, exceeding ~50,000 particles may cause
+    //          the application to freeze on startup.
     private final boolean useImageParticles = true;
     
     // OpenCL

@@ -22,7 +22,10 @@ import com.jme3.scene.Spatial;
 import codex.vfx.particles.OverflowStrategy;
 
 /**
- *
+ * Tests basic particles.
+ * <p>
+ * Created before drivers were mainstream, so particles are created manually.
+ * 
  * @author codex
  */
 public class TestBasicParticles extends DemoApplication implements TimerListener {
@@ -44,6 +47,7 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
         group.setOverflowStrategy(OverflowStrategy.CullNew);
         group.addDriver(ParticleDriver.force(new Vector3f(0f, -3f, 0f)));
         group.addDriver(ParticleDriver.Position);
+        group.addDriver(ParticleDriver.Angle);
         rootNode.attachChild(group);
         
         geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
@@ -73,7 +77,7 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
             p.color.set(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
             p.linearVelocity = nextRandomVector().multLocal(2f);
             p.setScale(FastMath.rand.nextFloat(.05f, .2f));
-            p.rotationSpeed.set(FastMath.rand.nextFloat(-20f, 20f));
+            p.rotationSpeed.set(FastMath.rand.nextFloat(-5f, 5f));
             group.add(p);
         }
     }

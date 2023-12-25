@@ -22,7 +22,6 @@ public abstract class ParticleGeometry <T extends ParticleData> extends Geometry
     
     protected ParticleGroup<T> group;
     protected int capacity = -1;
-    protected int peakSize = -1;
     protected boolean forceMeshUpdate = false;
     protected boolean useSpriteSheet = false;
     

@@ -100,6 +100,7 @@ public class TestInstancedParticles extends DemoApplication implements ParticleD
         
         Container main = new Container();
         main.setLocalTranslation(10, windowSize.y-10, 0);
+        main.addChild(new Label("Press P to unlock the cursor."));
         Container sliders = new Container();
         sliders.setBackground(null);
         sliders.setLayout(new SpringGridLayout());

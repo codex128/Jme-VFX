@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package codex.vfx.demo;
+package codex.vfx.test;
 
 import codex.boost.scene.SceneGraphIterator;
 import codex.vfx.particles.geometry.InstancedParticleGeometry;
@@ -46,10 +46,10 @@ import codex.vfx.particles.OverflowStrategy;
  *
  * @author codex
  */
-public class SuperDemo extends SimpleApplication {
+public class TestMultipleSystems extends SimpleApplication {
     
     public static void main(String[] args) {
-        new SuperDemo().start();
+        new TestMultipleSystems().start();
     }
     
     @Override
@@ -93,8 +93,8 @@ public class SuperDemo extends SimpleApplication {
             @Override
             public void updateParticle(ParticleData p, float tpf) {
                 if (p.getPosition().z > 100) {
-                    //p.setPosition(asteroids.getVolume().getNextPosition(asteroids.getWorldTransform()));
-                    //p.linearVelocity.y = 0;
+                    p.setPosition(asteroids.getVolume().getNextPosition(asteroids.getWorldTransform()));
+                    p.linearVelocity.y = 0;
                 }
             }
             @Override
@@ -142,7 +142,7 @@ public class SuperDemo extends SimpleApplication {
             @Override
             public void particleAdded(ParticleGroup group, ParticleData p) {
                 //p.color = new Range(ColorRGBA.BlackNoAlpha, ColorRGBA.White, Interpolator.Color, Easing.inLinear);
-                p.color = new Range(new ColorRGBA(0f, 0f, 0f, 0f), new ColorRGBA(0.3f, 0.3f, 0.03f, .1f), Interpolator.Color, Ease.inQuint);
+                p.color = new Range(new ColorRGBA(0f, 0f, 0f, 0f), new ColorRGBA(0.01f, 0.01f, 0.01f, .3f), Interpolator.Color, Ease.inQuint);
                 //p.color = new Range(new ColorRGBA(0f, 0f, 0f, 0f), new ColorRGBA(.005f, .005f, .005f, 1f),
                 //        Interpolator.Color, Ease.inOut(Ease.inLinear, Ease.inQuad, .97f));
                 //p.color = new MultiRange(

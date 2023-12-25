@@ -6,13 +6,11 @@ package codex.vfx.particles.geometry;
 
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
-import codex.vfx.particles.geometry.ParticleGeometry;
 import codex.vfx.utils.MeshUtils;
+import codex.vfx.utils.VfxUtils;
 import com.jme3.material.Material;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector4f;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
 import java.nio.ByteBuffer;
@@ -171,7 +169,7 @@ public class TrailingGeometry extends ParticleGeometry {
             } else {
                 // software normals
                 Vector3f across = rotAxis.cross(data.getRotation().mult(Vector3f.UNIT_Z))
-                        .normalizeLocal().multLocal(data.size.get());
+                        .normalizeLocal().multLocal(data.size.get()*VfxUtils.vectorAverage(data.getScale()));
                 Vector3f neg = across.negate().addLocal(data.getPosition());
                 across.addLocal(data.getPosition());
                 MeshUtils.writeVector3(positions, across);

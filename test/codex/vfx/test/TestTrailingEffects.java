@@ -17,12 +17,17 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import codex.vfx.particles.OverflowStrategy;
+import codex.vfx.particles.drivers.ParticleDriver;
+import codex.vfx.particles.drivers.emission.EmissionPoint;
+import codex.vfx.particles.drivers.emission.Emitter;
+import codex.vfx.particles.drivers.emission.ParticleFactory;
+import codex.vfx.particles.tweens.Value;
 
 /**
  * 
  * @author codex
  */
-public class TestTrailingEffects extends DemoApplication implements ParticleSpawner {
+public class TestTrailingEffects extends DemoApplication {
     
     private ParticleGroup<ParticleData> particles;
     private TrailingGeometry geometry;
@@ -33,11 +38,22 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
     }
     
     @Override
-    @SuppressWarnings("Convert2Lambda")
     public void demoInitApp() {
         
         particles = new ParticleGroup<>(50);
         particles.setOverflowStrategy(OverflowStrategy.CullOld);
+        particles.setVolume(new EmissionPoint());
+        Emitter e = Emitter.create();
+        e.setEmissionRate(Value.constant(0.01f));
+        particles.addDriver(e);
+        particles.addDriver(ParticleDriver.TransformToVolume);
+        particles.addDriver(new ParticleFactory() {
+            @Override
+            public void particleAdded(ParticleGroup group, ParticleData p) {
+                p.size.set(.1f);
+            }
+        });
+        rootNode.attachChild(particles);
         
         geometry = new TrailingGeometry(particles);
         geometry.setFaceCamera(true);
@@ -56,25 +72,17 @@ public class TestTrailingEffects extends DemoApplication implements ParticleSpaw
         mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         mat.setTransparent(true);
         geometry.setMaterial(mat);
+        particles.attachChild(geometry);
         
         setupCharacter();
         anim.setCurrentAction("cold-pistol-kill");
         
-        skin.getAttachmentsNode("mixamorig:LeftHandMiddle1").attachChild(geometry);
+        skin.getAttachmentsNode("mixamorig:LeftHandMiddle1").attachChild(particles);
         
         setupBloom();
         
     }
     @Override
-    public void demoUpdate(float tpf) {
-        //geometry.move(0f, 0f, 1f*tpf);
-    }
-    @Override
-    public ParticleData createParticle(Vector3f position, ParticleGroup group) {
-        ParticleData p = new ParticleData(1f);
-        p.setPosition(position);
-        p.setScale(.1f);
-        return p;
-    }
+    public void demoUpdate(float tpf) {}
     
 }
