@@ -4,7 +4,7 @@
  */
 package codex.vfx.particles.geometry;
 
-import codex.vfx.particles.ParticleData;
+import codex.vfx.particles.Particle;
 import codex.vfx.particles.ParticleGroup;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.math.Vector3f;
@@ -16,7 +16,7 @@ import com.jme3.scene.Mesh;
  * @author codex
  * @param <T>
  */
-public abstract class ParticleGeometry <T extends ParticleData> extends Geometry {
+public abstract class ParticleGeometry <T extends Particle> extends Geometry {
     
     public static final BoundingSphere INFINITE_BOUND = new BoundingSphere(Float.POSITIVE_INFINITY, Vector3f.ZERO);
     

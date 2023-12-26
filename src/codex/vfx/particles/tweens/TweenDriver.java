@@ -16,7 +16,7 @@ import com.jme3.math.Vector3f;
  *
  * @author codex
  */
-public class TweenDriver implements ParticleDriver {
+public class TweenDriver implements ParticleDriver<ParticleData> {
     
     private Value<Float> lifetime = Value.value(1f);
     private Value<Vector3f> linearVelocity = Value.value(Vector3f.ZERO);

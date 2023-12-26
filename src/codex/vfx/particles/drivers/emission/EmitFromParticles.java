@@ -15,10 +15,10 @@ import com.jme3.math.Transform;
  * 
  * @author codex
  */
-public class EmitFromParticles implements ParticleDriver {
+public class EmitFromParticles implements ParticleDriver<ParticleData> {
     
     private final ParticleGroup<ParticleData> emitter;
-    private Spawner spawner;
+    private Spawner<ParticleData> spawner;
     private boolean stopIfFull = true;
     private Transform transform = new Transform();
 

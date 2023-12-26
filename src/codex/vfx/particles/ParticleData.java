@@ -11,16 +11,15 @@ import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 
 /**
- * Contains information about a single particle.
+ * Main implementation of {@link Particle} which adds many
+ * useful properties.
  * <p>
- * May be extended to add more attributes.
+ * Most, if not all, prebuilt functionality in this library will use
+ * this implementation.
  * 
  * @author codex
  */
-public class ParticleData {
-    
-    protected float life = 1f, maxLife = life;
-    protected boolean alive = true;
+public class ParticleData extends Particle {
     
     /**
      * World/model space transform.
@@ -51,48 +50,31 @@ public class ParticleData {
     /**
      * Screen space rotation speed {@link Value}.
      */
-    public Value<Float> rotationSpeed = Value.value(0f);
+    public Value<Float> angleSpeed = Value.value(0f);
     /**
-     * Sprite faction {@link Value}.
+     * Sprite index {@link Value}.
      * <p>
      * Between 0, which is the upper left corner of the sprite sheet, and
      * the number of total units on the sprite sheet minus one.
      * <p>
- For a 4x4 sprite sheet (16 units), the faction must be between 0 and 15 (inclusive).
+     * For a 4x4 sprite sheet (16 units), the index must be between 0 and 15 (inclusive).
      */
     public Value<Integer> spriteIndex = Value.value(0);
 
     public ParticleData() {}
     public ParticleData(float life) {
         maxLife = this.life = life;
+    }    
+    
+    @Override
+    protected void updateValues(float l, float tpf) {
+        color.update(l, tpf);
+        size.update(l, tpf);
+        angle.update(l, tpf);
+        angleSpeed.update(l, tpf);
+        spriteIndex.update(l, tpf);
     }
     
-    public float getLife() {
-        return life;
-    }
-    /**
-     * Gets the maximum life.
-     * <p>
-     * This is the life amount when the particle was newly created.
-     * 
-     * @return 
-     */
-    public float getMaxLife() {
-        return maxLife;
-    }
-    /**
-     * Gets the percentage life remaining.
-     * <p>
-     * Full life returns 1.0 and no life returns 0.0.
-     * <p>
-     * <em>Note: this measures the percentage of life remaining,
-     * not percentage of life decayed!</em>
-     * 
-     * @return life percentage
-     */
-    public float getLifePercent() {
-        return life/maxLife;
-    }
     public Vector3f getPosition() {
         return transform.getTranslation();
     }
@@ -103,14 +85,6 @@ public class ParticleData {
         return transform.getScale();
     }
     
-    /**
-     * Sets the lifetime.
-     * 
-     * @param life 
-     */
-    public void setLife(float life) {
-        maxLife = this.life = life;
-    }
     /**
      * Sets the position.
      * 
@@ -174,49 +148,6 @@ public class ParticleData {
     public Vector3f setScale(float scale) {
         transform.setScale(scale);
         return transform.getScale();
-    }
-    
-    /**
-     * Kills the particle so it is destroyed on next update.
-     */
-    public void kill() {
-        // Setting a boolean instead of setting the life value directly
-        // because that may upset drivers performing "over lifetime" operations.
-        alive = false;
-    }
-    /**
-     * Updates the particle.
-     * 
-     * @param tpf
-     * @return true if the particle is alive, false otherwise
-     */
-    public boolean update(float tpf) {
-        life = Math.max(life-tpf, 0);
-        updateValues(tpf);
-        return isAlive();
-    }
-    /**
-     * Updates all {@link Value} objects belonging to this particle.
-     * 
-     * @param tpf 
-     */
-    protected void updateValues(float tpf) {
-        float l = getLifePercent();
-        color.update(l, tpf);
-        size.update(l, tpf);
-        angle.update(l, tpf);
-        rotationSpeed.update(l, tpf);
-        spriteIndex.update(l, tpf);
-    }
-    /**
-     * Returns true if the particle is alive.
-     * <p>
-     * i.e. life is greater than zero, and {@link #kill()} has not been called.
-     * 
-     * @return 
-     */
-    public boolean isAlive() {
-        return life > 0 && alive;
     }
 
 }

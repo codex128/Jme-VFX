@@ -11,7 +11,7 @@ package codex.vfx.particles;
  * @author codex
  * @param <T> type of particle data
  */
-public interface OverflowStrategy <T extends ParticleData> {
+public interface OverflowStrategy <T extends Particle> {
     
     /**
      * Removes a particle from the particle group.
@@ -25,14 +25,14 @@ public interface OverflowStrategy <T extends ParticleData> {
     /**
      * Removes the "oldest" particle (at index=0) from the group when overflow occurs.
      */
-    public static final OverflowStrategy CullOld = (ParticleGroup group, ParticleData particle) -> {
+    public static final OverflowStrategy CullOld = (ParticleGroup group, Particle particle) -> {
         return group.remove(0) == particle && particle != null;
     };
     
     /**
      * Removes the "newest" particle (at end of list) from the group when overflow occurs.
      */
-    public static final OverflowStrategy CullNew = (ParticleGroup group, ParticleData particle) -> {
+    public static final OverflowStrategy CullNew = (ParticleGroup group, Particle particle) -> {
         return group.remove(group.size()-1) == particle && particle != null;
     };
     

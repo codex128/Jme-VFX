@@ -4,6 +4,7 @@
  */
 package codex.vfx.particles.drivers.emission;
 
+import codex.vfx.particles.Particle;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
 import codex.vfx.particles.drivers.ParticleDriver;
@@ -17,7 +18,7 @@ import codex.vfx.particles.tweens.Value;
  * @author codex
  * @param <T>
  */
-public abstract class Emitter <T extends ParticleData> implements ParticleDriver<T>, Spawner<T> {
+public abstract class Emitter <T extends Particle> implements ParticleDriver<T>, Spawner<T> {
     
     private Value<Integer> maxEmissions = Value.value(-1);
     private Value<Integer> particlesPerEmission = Value.value(1);
@@ -34,9 +35,9 @@ public abstract class Emitter <T extends ParticleData> implements ParticleDriver
         }
     }
     @Override
-    public void updateParticle(ParticleData particle, float tpf) {}
+    public void updateParticle(Particle particle, float tpf) {}
     @Override
-    public void particleAdded(ParticleGroup group, ParticleData particle) {}    
+    public void particleAdded(ParticleGroup group, Particle particle) {}    
     @Override
     public void groupReset(ParticleGroup group) {
         reset();

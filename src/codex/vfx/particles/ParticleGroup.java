@@ -23,14 +23,14 @@ import java.util.LinkedList;
  * @author codex
  * @param <T> channel of particle data this group uses
  */
-public class ParticleGroup <T extends ParticleData> extends Node implements VirtualEffect, Iterable<T> {
+public class ParticleGroup <T extends Particle> extends Node implements VirtualEffect, Iterable<T> {
     
     private ParticleGroup parentGroup;
     private final LinkedList<ParticleGroup> childGroups = new LinkedList<>();
     private final ArrayList<T> particles = new ArrayList<>();
     private final LinkedList<ParticleDriver<T>> drivers = new LinkedList<>();
     private OverflowStrategy<T> overflow = OverflowStrategy.CullNew;
-    private EmissionVolume<T> volume = new EmissionPoint();
+    private EmissionVolume volume = new EmissionPoint();
     private int capacity;
     private float updateSpeed = 1f, decay = 1f;
     private float time = 0f, delay = 0f;
@@ -298,7 +298,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Virt
      * @param volume emission volume (not null)
      */
     @VfxAttribute(name="volume")
-    public void setVolume(EmissionVolume<T> volume) {
+    public void setVolume(EmissionVolume volume) {
         assert volume != null : "Emission volume cannot be null";
         this.volume = volume;
     }
@@ -418,7 +418,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Virt
      * @param i index between 0 (inclusive) and group size (exclusive)
      * @return particle at index
      */
-    public ParticleData get(int i) {
+    public T get(int i) {
         return particles.get(i);
     }
     /**
@@ -436,7 +436,7 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Virt
         return overflow;
     }
     @VfxAttribute(name="volume", input=false)
-    public EmissionVolume<T> getVolume() {
+    public EmissionVolume getVolume() {
         return volume;
     }
     /**
@@ -595,7 +595,6 @@ public class ParticleGroup <T extends ParticleData> extends Node implements Virt
     public float getRawTime() {
         return time;
     }
-
     @Override
     public Iterator<T> iterator() {
         return particles.iterator();

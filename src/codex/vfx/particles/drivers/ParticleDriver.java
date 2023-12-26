@@ -4,6 +4,7 @@
  */
 package codex.vfx.particles.drivers;
 
+import codex.vfx.particles.Particle;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
 import codex.vfx.particles.tweens.Value;
@@ -18,7 +19,7 @@ import com.jme3.math.Vector3f;
  * @author codex
  * @param <T> type of particle
  */
-public interface ParticleDriver <T extends ParticleData> {
+public interface ParticleDriver <T extends Particle> {
     
     /**
      * Performs an update on the particle group this is driving.
@@ -64,7 +65,7 @@ public interface ParticleDriver <T extends ParticleData> {
      * This operation is now done automatically by the particle.
      */
     @Deprecated
-    public static final ParticleDriver ValueUpdate = new ParticleDriver() {
+    public static final ParticleDriver ValueUpdate = new ParticleDriver<ParticleData>() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
@@ -78,7 +79,7 @@ public interface ParticleDriver <T extends ParticleData> {
     /**
      * Updates position based on linearVelocity.
      */
-    public static final ParticleDriver Position = new ParticleDriver() {
+    public static final ParticleDriver Position = new ParticleDriver<ParticleData>() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
@@ -94,7 +95,7 @@ public interface ParticleDriver <T extends ParticleData> {
     /**
      * Updates rotation based on angularVelocity.
      */
-    public static final ParticleDriver Rotation = new ParticleDriver() {
+    public static final ParticleDriver Rotation = new ParticleDriver<ParticleData>() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
@@ -108,30 +109,14 @@ public interface ParticleDriver <T extends ParticleData> {
     };
     
     /**
-     * Updates the color value for each particle.
-     */
-    public static final ParticleDriver Color = new ParticleDriver() {
-        @Override
-        public void updateGroup(ParticleGroup group, float tpf) {}
-        @Override
-        public void updateParticle(ParticleData particle, float tpf) {
-            particle.color.update(particle.getLifePercent(), tpf);
-        }
-        @Override
-        public void particleAdded(ParticleGroup group, ParticleData particle) {}
-        @Override
-        public void groupReset(ParticleGroup group) {}
-    };
-    
-    /**
      * Updates angle based on rotation speed.
      */
-    public static final ParticleDriver Angle = new ParticleDriver() {
+    public static final ParticleDriver Angle = new ParticleDriver<ParticleData>() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
         public void updateParticle(ParticleData particle, float tpf) {
-            particle.angle.set(particle.angle.get()+particle.rotationSpeed.get()*tpf);
+            particle.angle.set(particle.angle.get()+particle.angleSpeed.get()*tpf);
         }
         @Override
         public void particleAdded(ParticleGroup group, ParticleData particle) {}
@@ -142,7 +127,7 @@ public interface ParticleDriver <T extends ParticleData> {
     /**
      * Transforms new particles to the group's emission volume.
      */
-    public static final ParticleDriver TransformToVolume = new ParticleDriver() {
+    public static final ParticleDriver TransformToVolume = new ParticleDriver<ParticleData>() {
         @Override
         public void updateGroup(ParticleGroup group, float tpf) {}
         @Override
@@ -182,7 +167,7 @@ public interface ParticleDriver <T extends ParticleData> {
         return new DirectionalImpulse(direction, magnitude, angle);
     }
     
-    public static class ConstantForce implements ParticleDriver {
+    public static class ConstantForce implements ParticleDriver<ParticleData> {
         
         private final Vector3f force = new Vector3f();
 
@@ -202,7 +187,7 @@ public interface ParticleDriver <T extends ParticleData> {
         public void groupReset(ParticleGroup group) {}
         
     }
-    public static class DirectionalImpulse implements ParticleDriver {
+    public static class DirectionalImpulse implements ParticleDriver<ParticleData> {
         
         private final Vector3f direction;
         private final float magnitude;

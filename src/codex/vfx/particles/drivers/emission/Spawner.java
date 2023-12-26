@@ -4,7 +4,7 @@
  */
 package codex.vfx.particles.drivers.emission;
 
-import codex.vfx.particles.ParticleData;
+import codex.vfx.particles.Particle;
 
 /**
  * Spawns particles at certain intervals.
@@ -15,7 +15,7 @@ import codex.vfx.particles.ParticleData;
  * @author codex
  * @param <T> type of particle to spawn
  */
-public interface Spawner <T extends ParticleData> {
+public interface Spawner <T extends Particle> {
     
     /**
      * Updates the spawner.

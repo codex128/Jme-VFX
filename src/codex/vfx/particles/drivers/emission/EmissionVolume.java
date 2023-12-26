@@ -4,7 +4,6 @@
  */
 package codex.vfx.particles.drivers.emission;
 
-import codex.vfx.particles.ParticleData;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 
@@ -17,7 +16,7 @@ import com.jme3.math.Vector3f;
  * @author codex
  * @param <T>
  */
-public interface EmissionVolume <T extends ParticleData> {
+public interface EmissionVolume {
     
     /**
      * Returns the next position a particle should be spawned at.

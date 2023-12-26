@@ -22,7 +22,7 @@ import java.nio.ShortBuffer;
  * 
  * @author codex
  */
-public class TrailingGeometry extends ParticleGeometry {
+public class TrailingGeometry extends ParticleGeometry<ParticleData> {
      
     private int size = -1;
     private boolean faceCamera = true;

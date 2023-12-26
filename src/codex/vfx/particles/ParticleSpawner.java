@@ -7,7 +7,7 @@ package codex.vfx.particles;
 import com.jme3.math.Vector3f;
 
 /**
- * Use {@link EmissionVolume} instead.
+ * Use {@link EmissionVolume} and {@link Emitter} instead.
  * 
  * @author codex
  */

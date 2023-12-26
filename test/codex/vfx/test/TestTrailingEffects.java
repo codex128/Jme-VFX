@@ -7,7 +7,6 @@ package codex.vfx.test;
 import codex.vfx.test.util.DemoApplication;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
-import codex.vfx.particles.ParticleSpawner;
 import codex.vfx.particles.geometry.TrailingGeometry;
 import com.jme3.asset.TextureKey;
 import com.jme3.material.Material;
@@ -40,14 +39,14 @@ public class TestTrailingEffects extends DemoApplication {
     @Override
     public void demoInitApp() {
         
-        particles = new ParticleGroup<>(50);
+        particles = new ParticleGroup<ParticleData>(50);
         particles.setOverflowStrategy(OverflowStrategy.CullOld);
         particles.setVolume(new EmissionPoint());
         Emitter e = Emitter.create();
         e.setEmissionRate(Value.constant(0.01f));
         particles.addDriver(e);
         particles.addDriver(ParticleDriver.TransformToVolume);
-        particles.addDriver(new ParticleFactory() {
+        particles.addDriver(new ParticleFactory<ParticleData>() {
             @Override
             public void particleAdded(ParticleGroup group, ParticleData p) {
                 p.size.set(.1f);

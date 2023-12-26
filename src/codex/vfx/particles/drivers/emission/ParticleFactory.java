@@ -4,7 +4,7 @@
  */
 package codex.vfx.particles.drivers.emission;
 
-import codex.vfx.particles.ParticleData;
+import codex.vfx.particles.Particle;
 import codex.vfx.particles.ParticleGroup;
 import codex.vfx.particles.drivers.ParticleDriver;
 
@@ -13,7 +13,7 @@ import codex.vfx.particles.drivers.ParticleDriver;
  * @author codex
  * @param <T> type of particle data
  */
-public abstract class ParticleFactory <T extends ParticleData> implements ParticleDriver<T> {
+public abstract class ParticleFactory <T extends Particle> implements ParticleDriver<T> {
 
     @Override
     public void updateGroup(ParticleGroup<T> group, float tpf) {}

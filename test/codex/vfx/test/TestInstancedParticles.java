@@ -39,7 +39,7 @@ import codex.vfx.particles.OverflowStrategy;
  *
  * @author codex
  */
-public class TestInstancedParticles extends DemoApplication implements ParticleDriver {
+public class TestInstancedParticles extends DemoApplication implements ParticleDriver<ParticleData> {
     
     private float time = 0f;
     private ParticleGroup group;

@@ -77,7 +77,7 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
             p.color.set(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
             p.linearVelocity = nextRandomVector().multLocal(2f);
             p.setScale(FastMath.rand.nextFloat(.05f, .2f));
-            p.rotationSpeed.set(FastMath.rand.nextFloat(-5f, 5f));
+            p.angleSpeed.set(FastMath.rand.nextFloat(-5f, 5f));
             group.add(p);
         }
     }

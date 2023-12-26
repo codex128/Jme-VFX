@@ -65,7 +65,7 @@ public class TestMultipleSystems extends SimpleApplication {
         ParticleGroup main = new ParticleGroup(0);
         rootNode.attachChild(main);
         
-        ParticleGroup asteroids = new ParticleGroup(20);
+        ParticleGroup<ParticleData> asteroids = new ParticleGroup(20);
         asteroids.setName("asteroid group");
         asteroids.setLocalTranslation(0, 0, 0);
         asteroids.setOverflowStrategy(OverflowStrategy.CullNew);
@@ -76,7 +76,7 @@ public class TestMultipleSystems extends SimpleApplication {
         asteroids.addDriver(ParticleDriver.Rotation);
         asteroids.addDriver(ParticleDriver.TransformToVolume);
         asteroids.addDriver(ParticleDriver.force(new Vector3f(0f, -1f, 0f)));
-        asteroids.addDriver(new ParticleFactory() {
+        asteroids.addDriver(new ParticleFactory<ParticleData>() {
             @Override
             public void particleAdded(ParticleGroup group, ParticleData p) {
                 p.size.set(VfxUtils.gen.nextFloat(.8f, 1.2f));
@@ -87,7 +87,7 @@ public class TestMultipleSystems extends SimpleApplication {
                 p.angularVelocity.multLocal(VfxUtils.gen.nextFloat(10f, 15f));
             }
         });
-        asteroids.addDriver(new ParticleDriver() {
+        asteroids.addDriver(new ParticleDriver<ParticleData>() {
             @Override
             public void updateGroup(ParticleGroup group, float tpf) {}
             @Override
@@ -108,12 +108,12 @@ public class TestMultipleSystems extends SimpleApplication {
         asteroids.addDriver(emitter);
         main.attachChild(asteroids);
         
-        ParticleGroup flames = new ParticleGroup(5000);
+        ParticleGroup<ParticleData> flames = new ParticleGroup(5000);
         flames.setName("flames group");
         flames.setOverflowStrategy(OverflowStrategy.CullNew);
         flames.setVolume(new EmissionSphere(.8f));
         flames.setDecayRate(1f);
-        flames.addDriver(new ParticleFactory() {
+        flames.addDriver(new ParticleFactory<ParticleData>() {
             @Override
             public void particleAdded(ParticleGroup group, ParticleData p) {
                 //p.color = new Range(ColorRGBA.BlackNoAlpha, new ColorRGBA(1, .3f, 0, .5f), Interpolator.Color, Easing.inLinear);
@@ -131,14 +131,14 @@ public class TestMultipleSystems extends SimpleApplication {
         flames.addDriver(new EmitFromParticles(asteroids, flameEmit, false));
         asteroids.attachChild(flames);
         
-        ParticleGroup smoke = new ParticleGroup(7000);
+        ParticleGroup<ParticleData> smoke = new ParticleGroup(7000);
         smoke.setName("smoke group");
         smoke.setOverflowStrategy(OverflowStrategy.CullOld);
         smoke.setVolume(new EmissionSphere(.1f));
         smoke.addDriver(ParticleDriver.Angle);
         smoke.addDriver(ParticleDriver.Position);
         smoke.addDriver(ParticleDriver.force(new Vector3f(1f, 0f, 0f)));
-        smoke.addDriver(new ParticleFactory() {
+        smoke.addDriver(new ParticleFactory<ParticleData>() {
             @Override
             public void particleAdded(ParticleGroup group, ParticleData p) {
                 //p.color = new Range(ColorRGBA.BlackNoAlpha, ColorRGBA.White, Interpolator.Color, Easing.inLinear);
@@ -157,7 +157,7 @@ public class TestMultipleSystems extends SimpleApplication {
                 //p.spriteIndex.set(VfxUtils.gen.nextInt(15));
                 p.setLife(5.7f);
                 p.angle.set(VfxUtils.gen.nextFloat(FastMath.TWO_PI));
-                p.rotationSpeed.set(VfxUtils.gen.nextFloat(-.1f, .1f));
+                p.angleSpeed.set(VfxUtils.gen.nextFloat(-.1f, .1f));
             }
         });
         Emitter smokeEmit = Emitter.create();
