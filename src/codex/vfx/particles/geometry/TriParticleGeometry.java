@@ -30,6 +30,12 @@ public class TriParticleGeometry extends ParticleGeometry<ParticleData> {
     private final MeshPrototype prototype;
     private int size = -1;
     
+    /**
+     * Creates a geometry displaying the particle group with the mesh prototype.
+     * 
+     * @param group
+     * @param prototype 
+     */
     public TriParticleGeometry(ParticleGroup group, MeshPrototype prototype) {
         super(group);
         this.prototype = prototype;

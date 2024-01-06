@@ -32,20 +32,40 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     private OverflowStrategy<T> overflow = OverflowStrategy.CullNew;
     private EmissionVolume volume = new EmissionPoint();
     private int capacity;
+    private int dynamicSizingStep = -1;
     private float updateSpeed = 1f, decay = 1f;
     private float time = 0f, delay = 0f;
     private boolean playing = true, worldPlayState = true;
     private boolean inheritDecayRate = false;
     
+    /**
+     * Creates a particle group with zero capacity.
+     */
     public ParticleGroup() {
         this(ParticleGroup.class.getSimpleName(), 0);
     }
+    /**
+     * Creates a particle group with zero capacity.
+     * 
+     * @param name name of this spatial
+     */
     public ParticleGroup(String name) {
         this(name, 0);
     }
+    /**
+     * Creates a particle group with the given capacity.
+     * 
+     * @param capacity 
+     */
     public ParticleGroup(int capacity) {
         this(ParticleGroup.class.getSimpleName(), capacity);
     }
+    /**
+     * Creates a particle group with the given capacity.
+     * 
+     * @param name name of this spatial
+     * @param capacity 
+     */
     public ParticleGroup(String name, int capacity) {
         super(name);
         assert capacity >= 0 : "Group capacity must be greater than or equal to zero.";
@@ -95,7 +115,9 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
         if (worldPlayState) {
             time += t;
         }
-        t *= (inDelayZone() ? 0 : 1);
+        if (inDelayZone()) {
+            t = 0;
+        }
         decay *= this.decay;
         if (worldPlayState) {
             updateParticles(t, (inheritDecayRate ? decay : this.decay));
@@ -122,8 +144,12 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     
     protected boolean addParticle(T particle) {
         if (capacity > 0 && worldPlayState && particles.add(particle)) {
-            if (particles.size() > capacity && overflow.removeParticle(this, particle)) {
-                return false;
+            if (particles.size() > capacity) {
+                if (dynamicSizingStep >= 0) {
+                    capacity = particles.size()+dynamicSizingStep;
+                } else if (overflow.removeParticle(this, particle)) {
+                    return false;
+                }
             }
             for (ParticleDriver<T> d : drivers) {
                 d.particleAdded(this, particle);
@@ -135,7 +161,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     protected boolean validateGroupSize(boolean exception) {
         if (particles.size() > capacity) {
             if (exception) {
-                throw new IllegalStateException("Number of particles cannot exceed the group capacity.");
+                throw new IllegalStateException("Internal Error: number of particles exceeded the group capacity.");
             }
             return false;
         }
@@ -174,8 +200,12 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
         }
         int c = 0;
         for (T p : particles) {
-            if (this.particles.size() >= capacity && !overflow.removeParticle(this, p)) {
-                continue;
+            if (this.particles.size() >= capacity) {
+                if (dynamicSizingStep >= 0) {
+                    capacity = this.particles.size()+dynamicSizingStep;
+                } else if (!overflow.removeParticle(this, p)) {
+                    continue;
+                }
             }
             if (addParticle(p)) c++;
         }
@@ -351,6 +381,30 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     public void setInheritDecayRate(boolean inheritDecayRate) {
         this.inheritDecayRate = inheritDecayRate;
     }
+    /**
+     * Sets this group to dynamically resize its capacity to accept more particles.
+     * <p>
+     * The integer value indicates how much above the necessary capacity
+     * the group's capacity is set to. A dynamic sizing step of 3 would resize
+     * the group to be 3 greater than the current number of particles. Resizing
+     * only occurs when the number of particles would exceed the group's capacity.
+     * <p>
+     * This feature can potentially put more strain on the system, because particle
+     * geometries have to create new buffers to match the changing capacity. It is
+     * recommended to set the dynamic resizing step as high as reasonably possible
+     * in order to cut down of the number of reallocations the geometries must do.
+     * That is, if this feature must be used at all.
+     * <p>
+     * To disable this feature, set the dynamic sizing step to less than zero.
+     * <p>
+     * default={@code -1} (disabled)
+     * 
+     * @param step 
+     */
+    @VfxAttribute(name="dynamicSizingStep")
+    public void setDynamicSizingStep(int step) {
+        this.dynamicSizingStep = step;
+    }
     
     /**
      * Sets this group's play state to true.
@@ -396,18 +450,34 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
         return (playing = !playing);
     }
     /**
-     * Resets the group by removing all particles and reseting the simulation time.
+     * Resets the group by removing all particles, reseting the simulation time,
+     * and reseting child particle groups.
      * <p>
      * Drivers are also notified, so they can reset themselves accordingly.
      * <br>Will not reset if paused.
      */
     @VfxCommand(name="reset")
     public void reset() {
+        reset(true);
+    }
+    /**
+     * Resets the group by removing all particles, reseting the simulation time,
+     * and (optionally) reseting child particle groups.
+     * <p>
+     * Drivers are also notified, so they can reset themselves accordingly.
+     * <br>Will not reset if paused.
+     * 
+     * @param resetChildren if true, child particle groups will also be reset
+     */
+    public void reset(boolean resetChildren) {
         if (worldPlayState) {
             particles.clear();
             time = 0;
             for (ParticleDriver<T> d : drivers) {
                 d.groupReset(this);
+            }
+            if (resetChildren) for (ParticleGroup g : childGroups) {
+                g.reset(true);
             }
         }
     }
@@ -424,6 +494,8 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * Gets the list of particles this group controls.
      * <p>
+     * Note: {@code ParticleGroup} is iterable in this respect.
+     * <p>
      * <em>Do not modify the returned list!</em>
      * 
      * @return 
@@ -431,10 +503,18 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     public ArrayList<T> getParticleList() {
         return particles;
     }
+    /**
+     * 
+     * @return 
+     */
     @VfxAttribute(name="overflowStrategy", input=false)
     public OverflowStrategy<T> getOverflowStrategy() {
         return overflow;
     }
+    /**
+     * 
+     * @return 
+     */
     @VfxAttribute(name="volume", input=false)
     public EmissionVolume getVolume() {
         return volume;
@@ -448,6 +528,16 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
      */
     public LinkedList<ParticleGroup> getChildGroupList() {
         return childGroups;
+    }
+    /**
+     * Gets the list of drivers controlling this particle group.
+     * <p>
+     * <em>Do not modify the returned list!</em>
+     * 
+     * @return 
+     */
+    public LinkedList<ParticleDriver<T>> getDriverList() {
+        return drivers;
     }
     /**
      * Get the parent particle group of this group.
@@ -468,7 +558,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     }
     /**
      * Returns true if the number of particles in this group is
-     * greater than or equal to the capacity.
+     * equal to its capacity.
      * 
      * @return 
      */
@@ -487,6 +577,11 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     public boolean getLocalPlayState() {
         return playing;
     }
+    /**
+     * Returns true if the current time is within this group's delay zone.
+     * 
+     * @return 
+     */
     public boolean inDelayZone() {
         return time < delay;
     }
@@ -508,21 +603,45 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     public int capacity() {
         return capacity;
     }
+    /**
+     * 
+     * @return 
+     */
     @Override
     public float getUpdateSpeed() {
         return updateSpeed;
     }
+    /**
+     * 
+     * @return 
+     */
     @VfxAttribute(name="decayRate", input=false)
     public float getDecayRate() {
         return decay;
     }
+    /**
+     * 
+     * @return 
+     */
     @Override
     public float getInitialDelay() {
         return delay;
     }
+    /**
+     * 
+     * @return 
+     */
     @VfxAttribute(name="inheritDecayRate", input=false)
     public boolean isInheritDecayRate() {
         return inheritDecayRate;
+    }
+    /**
+     * 
+     * @return 
+     */
+    @VfxAttribute(name="dynamicSizingStep", input=false)
+    public int getDynamicSizingStep() {
+        return dynamicSizingStep;
     }
     /**
      * Fetches the world update speed of this group.

@@ -19,9 +19,9 @@ public class TestFilterKernels extends DemoApplication {
     // Matrix defining how the kernel samples surrounding pixels.
     // Feel free to play around with this.
     private final Matrix3f kernel = new Matrix3f(
-        2,   2,  2,
-        2, -15,  2,
-        2,   2,  2
+        -2,   -2,  -2,
+        -2,   15,  -2,
+        -2,   -2,  -2
     );
     
     public static void main(String[] args) {

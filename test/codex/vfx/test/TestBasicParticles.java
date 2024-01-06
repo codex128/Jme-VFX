@@ -5,8 +5,6 @@
 package codex.vfx.test;
 
 import codex.boost.ColorHSBA;
-import codex.boost.Timer;
-import codex.boost.TimerListener;
 import codex.vfx.mesh.MeshPrototype;
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
@@ -20,21 +18,17 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
 import codex.vfx.particles.OverflowStrategy;
+import codex.vfx.particles.drivers.emission.Emitter;
+import codex.vfx.particles.drivers.emission.ParticleFactory;
+import codex.vfx.particles.tweens.Value;
+import codex.vfx.utils.VfxUtils;
 
 /**
  * Tests basic particles.
- * <p>
- * Created before drivers were mainstream, so particles are created manually.
  * 
  * @author codex
  */
-public class TestBasicParticles extends DemoApplication implements TimerListener {
-    
-    private ParticleGroup<ParticleData> group;
-    private TriParticleGeometry geometry;
-    private final Timer timer = new Timer(.1f);
-    private final int particlesPerEmission = 5;
-    private final float gravity = 5f;
+public class TestBasicParticles extends DemoApplication {
     
     public static void main(String[] args) {
         new TestBasicParticles().start();
@@ -43,15 +37,30 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
     @Override
     public void demoInitApp() {
     
-        group = new ParticleGroup(200);
-        group.setOverflowStrategy(OverflowStrategy.CullNew);
+        ParticleGroup<ParticleData> group = new ParticleGroup(200);
+        group.setLocalTranslation(0, 3, 0);
+        group.setOverflowStrategy(OverflowStrategy.CullOld);
         group.addDriver(ParticleDriver.force(new Vector3f(0f, -3f, 0f)));
         group.addDriver(ParticleDriver.Position);
         group.addDriver(ParticleDriver.Angle);
+        Emitter e = Emitter.create();
+        e.setParticlesPerEmission(Value.constant(5));
+        e.setEmissionRate(Value.constant(.1f));
+        group.addDriver(e);
+        group.addDriver(new ParticleFactory<ParticleData>() {
+            @Override
+            public void particleAdded(ParticleGroup<ParticleData> group, ParticleData p) {
+                p.setLife(4f);
+                p.setPosition(group.getVolume().getNextPosition(group.getWorldTransform()));
+                p.color.set(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
+                p.linearVelocity = VfxUtils.gen.nextUnitVector3f().multLocal(VfxUtils.gen.nextFloat(4));
+                p.setScale(FastMath.rand.nextFloat(.05f, .2f));
+                p.angleSpeed.set(FastMath.rand.nextFloat(-5f, 5f));
+            }
+        });
         rootNode.attachChild(group);
         
-        geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
-        geometry.setLocalTranslation(0, 3, 0);
+        TriParticleGeometry geometry = new TriParticleGeometry(group, MeshPrototype.QUAD);
         geometry.setCullHint(Spatial.CullHint.Never);
         geometry.setQueueBucket(RenderQueue.Bucket.Transparent);
         Material mat = new Material(assetManager, "MatDefs/particles.j3md");
@@ -59,35 +68,9 @@ public class TestBasicParticles extends DemoApplication implements TimerListener
         mat.setTransparent(true);
         geometry.setMaterial(mat);
         rootNode.attachChild(geometry);
-        
-        timer.setCycleMode(Timer.CycleMode.INFINITE);
-        timer.addListener(this);
-        timer.start();
     
     }
     @Override
-    public void demoUpdate(float tpf) {
-        timer.update(tpf);
-    }
-    @Override
-    public void onTimerFinish(Timer timer) {
-        for (int i = 0; i < particlesPerEmission; i++) {
-            ParticleData p = new ParticleData(4f);
-            p.setPosition(geometry.getWorldTranslation());
-            p.color.set(new ColorHSBA(FastMath.nextRandomFloat(), 1f, .5f, 1f).toRGBA());
-            p.linearVelocity = nextRandomVector().multLocal(2f);
-            p.setScale(FastMath.rand.nextFloat(.05f, .2f));
-            p.angleSpeed.set(FastMath.rand.nextFloat(-5f, 5f));
-            group.add(p);
-        }
-    }
-    
-    private Vector3f nextRandomVector() {
-        return new Vector3f(
-            FastMath.rand.nextFloat(-1, 1),
-            FastMath.rand.nextFloat(-1, 1),
-            FastMath.rand.nextFloat(-1, 1)
-        ).normalizeLocal();
-    }
+    public void demoUpdate(float tpf) {}
     
 }

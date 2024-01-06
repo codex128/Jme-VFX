@@ -56,7 +56,7 @@ public class TestMultipleSystems extends SimpleApplication {
     public void simpleInitApp() {
         
         flyCam.setMoveSpeed(40);
-        viewPort.setBackgroundColor(new ColorRGBA(.01f, .01f, .01f, 1f));
+        //viewPort.setBackgroundColor(new ColorRGBA(.01f, .01f, .01f, 1f));
         
         rootNode.addLight(VfxUtils.loadLightProbe(assetManager, "Scenes/City_Night_Lights.j3o"));
         rootNode.addLight(new AmbientLight(new ColorRGBA(.3f, 0f, 0f, 1f)));

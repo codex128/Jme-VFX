@@ -16,6 +16,9 @@ import com.jme3.math.Vector3f;
  */
 public class MeshPrototype {
     
+    /**
+     * Prototype of a 1x1 quad consisting of two triangles.
+     */
     public static final MeshPrototype QUAD = new MeshPrototype().setVerts(
         new Vector3f(-1, 1, 0),
         new Vector3f(1, 1, 0),

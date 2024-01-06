@@ -39,7 +39,7 @@ public class TestTrailingEffects extends DemoApplication {
     @Override
     public void demoInitApp() {
         
-        particles = new ParticleGroup<ParticleData>(50);
+        particles = new ParticleGroup<>(50);
         particles.setOverflowStrategy(OverflowStrategy.CullOld);
         particles.setVolume(new EmissionPoint());
         Emitter e = Emitter.create();
@@ -61,7 +61,6 @@ public class TestTrailingEffects extends DemoApplication {
         geometry.setCullHint(Spatial.CullHint.Never);
         Material mat = new Material(assetManager, "MatDefs/trail.j3md");
         TextureKey texKey = new TextureKey("Textures/wispy-trail.png");
-        texKey.setTextureTypeHint(Texture.Type.TwoDimensional);
         texKey.setGenerateMips(false);
         Texture tex = assetManager.loadTexture(texKey);
         mat.setTexture("Texture", tex);

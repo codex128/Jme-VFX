@@ -50,6 +50,18 @@ public class VfxUtils {
     }
     
     /**
+     * Constructs a random unit vector with its magnitude between
+     * the minimum and maximum distances.
+     * 
+     * @param minDist
+     * @param maxDist
+     * @return 
+     */
+    public static Vector3f random(float minDist, float maxDist) {
+        return gen.nextUnitVector3f().multLocal(gen.nextFloat(minDist, maxDist));
+    }
+    
+    /**
      * Generates a random vector within a box.
      * 
      * @param center center point of the box
