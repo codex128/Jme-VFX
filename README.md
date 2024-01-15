@@ -15,4 +15,4 @@ Demos additionally require:
 
 All, except Boost, are common libraries for JMonkeyEngine.
 
-This library was intended to only require Java 8, but due to a mistake, Java 17 is required. However, by changing the source code to remove a single override annotation in `codex.vfx.utils.VfxRandomGenerator`, you can restore Java 8 compatibility. I am working on fixing this issue, but in the meantime, sorry for the inconvenience.
+This library was intended to only require Java 8, but due to a mistake, Java 17 is required for the library as is. However, by changing the source code to remove a single override annotation in `codex.vfx.utils.VfxRandomGenerator`, you can restore Java 8 compatibility. I am working on fixing this issue, but in the meantime, sorry for the inconvenience.
