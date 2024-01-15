@@ -14,7 +14,6 @@ public class VfxRandomGenerator extends Generator {
     
     @Override
     public float nextFloat(float max) {
-        assert max >= 0;
         return nextFloat(0, max);
     }
     
