@@ -10,7 +10,6 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Plane;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
-import jme3utilities.math.noise.Generator;
 
 /**
  * Utils for vfx and general applications.
@@ -19,7 +18,7 @@ import jme3utilities.math.noise.Generator;
  */
 public class VfxUtils {
     
-    public static final Generator gen = new Generator();
+    public static final VfxRandomGenerator gen = new VfxRandomGenerator();
     private static final Plane tempPlane = new Plane();
     
     /**
@@ -29,7 +28,7 @@ public class VfxUtils {
      * 
      * @return 
      */
-    public static Generator getGenerator() {
+    public static VfxRandomGenerator getGenerator() {
         return gen;
     }
     

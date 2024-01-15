@@ -335,7 +335,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * Sets the rate at which particles update.
      * <p>
- This name is propogated to drivers through {@code tpf}.<br>
+     * This is propogated to drivers through {@code tpf}.<br>
      * default=1.0
      * 
      * @param speed 
@@ -506,6 +506,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setOverflowStrategy(codex.vfx.particles.OverflowStrategy)
      */
     @VfxAttribute(name="overflowStrategy", input=false)
     public OverflowStrategy<T> getOverflowStrategy() {
@@ -514,6 +515,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setVolume(codex.vfx.particles.drivers.emission.EmissionVolume)
      */
     @VfxAttribute(name="volume", input=false)
     public EmissionVolume getVolume() {
@@ -606,6 +608,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setUpdateSpeed(float)
      */
     @Override
     public float getUpdateSpeed() {
@@ -614,6 +617,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setDecayRate(float)
      */
     @VfxAttribute(name="decayRate", input=false)
     public float getDecayRate() {
@@ -622,6 +626,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setInitialDelay(float)
      */
     @Override
     public float getInitialDelay() {
@@ -630,6 +635,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setInheritDecayRate(boolean)
      */
     @VfxAttribute(name="inheritDecayRate", input=false)
     public boolean isInheritDecayRate() {
@@ -638,6 +644,7 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
     /**
      * 
      * @return 
+     * @see #setDynamicSizingStep(int)
      */
     @VfxAttribute(name="dynamicSizingStep", input=false)
     public int getDynamicSizingStep() {

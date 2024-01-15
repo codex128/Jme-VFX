@@ -6,7 +6,6 @@ package codex.vfx.particles.geometry;
 
 import codex.vfx.particles.ParticleData;
 import codex.vfx.particles.ParticleGroup;
-import codex.vfx.particles.geometry.ParticleGeometry;
 import codex.vfx.utils.MeshUtils;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.math.ColorRGBA;
