@@ -559,6 +559,19 @@ public class ParticleGroup <T extends Particle> extends Node implements VirtualE
         return particles.isEmpty();
     }
     /**
+     * Returns true if this group is empty and all child groups are
+     * finished by this same standard.
+     * 
+     * @return 
+     */
+    public boolean isFinished() {
+        if (!isEmpty()) return false;
+        for (ParticleGroup child : childGroups) {
+            if (!child.isFinished()) return false;
+        }
+        return true;
+    }
+    /**
      * Returns true if the number of particles in this group is
      * equal to its capacity.
      * 
