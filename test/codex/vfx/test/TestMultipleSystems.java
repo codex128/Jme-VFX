@@ -218,8 +218,6 @@ public class TestMultipleSystems extends SimpleApplication {
         smoke.attachChild(smokeGeometry);
         
         FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
-        SSRFilter ssr = new SSRFilter();
-        fpp.addFilter(ssr);
         BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
         bloom.setBlurScale(1);
         bloom.setBloomIntensity(10);
